@@ -3,35 +3,9 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as nd
 import matplotlib.ticker as tkr
 import cv2
+from my_utils import ellipse, raw_points_grid
+
 np.random.seed(1)
-
-
-def ellipse(u, v, a, b):
-    """
-    :param u: x position of center
-    :param v: y position of center
-    :param a: radius in x direction
-    :param b: radius in y direction
-    :return: v1: vector of x coordinates, v2: vector of y coordinates
-    """
-    t = np.linspace(0, 2 * np.pi, 100)
-    v1 = u + a * np.cos(t)
-    v2 = v + b * np.sin(t)
-    return v1, v2
-
-
-def raw_points_grid(res, sf):
-    """
-    :param res: Resolution
-    :param sf: Scale factor
-    :return: matrix
-    """
-    resolution = res * sf
-    x = np.random.randint(low=0, high=resolution, size=resolution)
-    y = np.random.randint(low=0, high=resolution, size=resolution)
-    mat = np.zeros((resolution, resolution))
-    mat[x, y] = 1
-    return mat
 
 
 def make_plots(raw_arrays, gaussian_arrays, sf):
@@ -52,6 +26,26 @@ def make_plots(raw_arrays, gaussian_arrays, sf):
             axes[i, j].xaxis.set_major_formatter(fmt)
             axes[i, j].yaxis.set_major_formatter(fmt)
     plt.show()
+
+
+def subtract_median(gaussian_array, filter_size, show_plots=True):
+    """
+    Subtracts median filtered image from original image to reduce noise (step 2 of plotnikov paper)
+    Optionally shows before/after
+    :param filter_size: size of filter to be passed to scipy
+    :param gaussian_array:
+    :param show_plots:
+    :return: Fitered image
+    """
+    g_med = nd.median_filter(gaussian_array, filter_size)
+    filtered = np.abs(gaussian_array - g_med)
+    if show_plots:
+        fig, ax = plt.subplots(1, 2)
+        ax[0].imshow(gaussian_array, cmap="gray")
+        ax[0].title.set_text("Before Filter")
+        ax[1].imshow(filtered, cmap="gray")
+        ax[1].title.set_text("After Filter")
+    return filtered
 
 
 def create_image(res, sf, make_plot=True, return_array=True, save_image=True):
@@ -118,6 +112,7 @@ raw_mat = raw_points_grid(1608, 2)
 moved_mat = move_points(raw_mat, move_by_px_up=100, move_by_px_down=0)
 rarrs = [raw_mat, moved_mat]
 unmoved_gauss = nd.gaussian_filter(raw_mat, sigma=5.0, order=0)
+subtract_median(unmoved_gauss, 10)
 moved_gauss = nd.gaussian_filter(moved_mat, sigma=5.0, order=0)
 gaussians = [unmoved_gauss, moved_gauss]
 make_plots(rarrs, gaussians, 2)
@@ -129,8 +124,11 @@ mod_diffs = cv2.subtract(moved_gauss, unmoved_gauss)
 plt.imshow(mod_diffs, cmap="gray")
 plt.show()
 
-#TODO: compute error of localization - use local maxima detection
-#TODO: compute displacement & displacement error - reference 20.2.3 of plotnikov paper
+# TODO: compute error of localization - use local maxima detection
+# https://stackoverflow.com/questions/9111711/get-coordinates-of-local-maxima-in-2d-array-above-certain-value
+# TODO: remove local maxima that are too close to each other, within 4 - 10 pixels
+# TODO: compute displacement & displacement error - reference 20.2.3 of plotnikov paper
+
 
 # fmt = tkr.FuncFormatter(numfmt)
 # resolution = 1608 * scale_factor
