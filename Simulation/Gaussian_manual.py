@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as nd
 import matplotlib.ticker as tkr
 import cv2
-from my_utils import ellipse, raw_points_grid
+from my_utils import raw_points_grid
 
 np.random.seed(1)
 
@@ -46,6 +46,21 @@ def subtract_median(gaussian_array, filter_size, show_plots=True):
         ax[1].imshow(filtered, cmap="gray")
         ax[1].title.set_text("After Filter")
     return filtered
+
+
+def add_out_of_focus(orig_g_mat, show_plots=True):
+    new = raw_points_grid(1608, 2)
+    np.random.shuffle(new)
+    blurry_points = nd.gaussian_filter(new, sigma=100, order=0)
+    mod = orig_g_mat + blurry_points
+    if show_plots:
+        fig, ax = plt.subplots(1, 2)
+        ax[0].imshow(orig_g_mat, cmap="gray")
+        ax[0].title.set_text("Original")
+        ax[1].imshow(mod, cmap="gray")
+        ax[1].title.set_text("With Blurry Points")
+        plt.show()
+    return mod
 
 
 def create_image(res, sf, make_plot=True, return_array=True, save_image=True):
@@ -109,43 +124,23 @@ def move_points(mat, move_by_px_up, move_by_px_down):
 
 
 raw_mat = raw_points_grid(1608, 2)
-moved_mat = move_points(raw_mat, move_by_px_up=100, move_by_px_down=0)
-rarrs = [raw_mat, moved_mat]
 unmoved_gauss = nd.gaussian_filter(raw_mat, sigma=5.0, order=0)
-subtract_median(unmoved_gauss, 10)
-moved_gauss = nd.gaussian_filter(moved_mat, sigma=5.0, order=0)
-gaussians = [unmoved_gauss, moved_gauss]
-make_plots(rarrs, gaussians, 2)
+add_out_of_focus(unmoved_gauss)
+# moved_mat = move_points(raw_mat, move_by_px_up=100, move_by_px_down=0)
+# rarrs = [raw_mat, moved_mat]
+# subtract_median(unmoved_gauss, 10)
+# moved_gauss = nd.gaussian_filter(moved_mat, sigma=5.0, order=0)
+# gaussians = [unmoved_gauss, moved_gauss]
+# make_plots(rarrs, gaussians, 2)
 
-raw_diffs = cv2.subtract(moved_mat, raw_mat)
-plt.imshow(raw_diffs, cmap="gray")
-plt.show()
-mod_diffs = cv2.subtract(moved_gauss, unmoved_gauss)
-plt.imshow(mod_diffs, cmap="gray")
-plt.show()
+# raw_diffs = cv2.subtract(moved_mat, raw_mat)
+# plt.imshow(raw_diffs, cmap="gray")
+# plt.show()
+# mod_diffs = cv2.subtract(moved_gauss, unmoved_gauss)
+# plt.imshow(mod_diffs, cmap="gray")
+# plt.show()
 
 # TODO: compute error of localization - use local maxima detection
 # https://stackoverflow.com/questions/9111711/get-coordinates-of-local-maxima-in-2d-array-above-certain-value
 # TODO: remove local maxima that are too close to each other, within 4 - 10 pixels
 # TODO: compute displacement & displacement error - reference 20.2.3 of plotnikov paper
-
-
-# fmt = tkr.FuncFormatter(numfmt)
-# resolution = 1608 * scale_factor
-# x = np.random.randint(low=0, high=resolution, size=resolution)
-# y = np.random.randint(low=0, high=resolution, size=resolution)
-# mat = np.zeros((resolution, resolution))
-# mat[x, y] = 1
-# print(np.sum(mat))
-# mat2 = nd.gaussian_filter(mat, sigma=5.0, order=0)
-# fig, axes = plt.subplots(1, 2)
-# axes[0].imshow(mat, cmap="gray", interpolation="nearest")
-# axes[1].imshow(mat2, cmap="gray")
-# oval_x, oval_y = ellipse(1608 / 2 * scale_factor, 1608 / 2 * scale_factor, 200 * scale_factor, 300 * scale_factor)
-# axes[1].plot(oval_x, oval_y)
-# for i in range(len(axes)):
-#     axes[i].xaxis.set_major_formatter(fmt)
-#     axes[i].yaxis.set_major_formatter(fmt)
-# plt.show()
-# t1 = time.time()
-# print(t1 - t0)

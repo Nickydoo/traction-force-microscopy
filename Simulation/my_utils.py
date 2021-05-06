@@ -28,4 +28,5 @@ def ellipse(u, v, a, b):
     t = np.linspace(0, 2 * np.pi, 100)
     v1 = u + a * np.cos(t)
     v2 = v + b * np.sin(t)
+    # oval_x, oval_y = ellipse(1608 / 2 * scale_factor, 1608 / 2 * scale_factor, 200 * scale_factor, 300 * scale_factor)
     return v1, v2
