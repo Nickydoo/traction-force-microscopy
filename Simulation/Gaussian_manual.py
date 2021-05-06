@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as nd
 import matplotlib.ticker as tkr
 import cv2
-from my_utils import raw_points_grid
+from my_utils import raw_points_grid, mse, struct_sim
+from scipy.signal import correlate2d
+
 
 np.random.seed(1)
 
@@ -45,7 +47,51 @@ def subtract_median(gaussian_array, filter_size, show_plots=True):
         ax[0].title.set_text("Before Filter")
         ax[1].imshow(filtered, cmap="gray")
         ax[1].title.set_text("After Filter")
-    return filtered
+        plt.show()
+    brightness_factor = np.min(filtered)
+    mod = filtered - brightness_factor
+    return mod
+
+
+def find_maxima(img, show_plots=True):
+    neighborhood_size = 10
+    t = 2  # weight for avg intensity
+    avg_intensity = t * np.average(img)  # 0 is black and 1 is white, you can just average the values of the entire img
+    data_max = nd.filters.maximum_filter(img, neighborhood_size)
+    maxima = (img == data_max)
+    diff = (data_max - avg_intensity) > 0
+    maxima[diff == 0] = 0
+    labeled, num_objects = nd.label(maxima)
+    slices = nd.find_objects(labeled)
+    x, y = [], []
+    for dy, dx in slices:
+        x_center = (dx.start + dx.stop - 1) / 2
+        x.append(x_center)
+        y_center = (dy.start + dy.stop - 1) / 2
+        y.append(y_center)
+    print(x[100:120])
+    # print(y[100])
+    # new_mat = np.zeros_like(img)
+    # new_mat[x, y] = 1
+    if show_plots:
+        fig, ax = plt.subplots(1, 2)
+        ax[0].imshow(img, cmap="gray")
+        ax[0].title.set_text("Regular Image")
+        ax[1].imshow(maxima, cmap="gray")
+        ax[1].title.set_text("Local Maxima")
+        plt.show()
+    return maxima
+
+
+def localization_error(true_im, im):
+    """
+    :param true_im: Unblurred, unfiltered image
+    :param im: Image after processing
+    :return: MSE and SSIM
+    """
+    mean_squared_err = mse(true_im, im)
+    structural_similarity = struct_sim(true_im, im)
+    return mean_squared_err, structural_similarity
 
 
 def add_out_of_focus(orig_g_mat, show_plots=True):
@@ -125,7 +171,10 @@ def move_points(mat, move_by_px_up, move_by_px_down):
 
 raw_mat = raw_points_grid(1608, 2)
 unmoved_gauss = nd.gaussian_filter(raw_mat, sigma=5.0, order=0)
-add_out_of_focus(unmoved_gauss)
+added_blurry_points = add_out_of_focus(unmoved_gauss, False)
+filtered = subtract_median(added_blurry_points, 10, False)
+processed = find_maxima(filtered)
+print(localization_error(raw_mat.reshape(1608, 1608), processed.reshape(1608, 1608)))
 # moved_mat = move_points(raw_mat, move_by_px_up=100, move_by_px_down=0)
 # rarrs = [raw_mat, moved_mat]
 # subtract_median(unmoved_gauss, 10)
@@ -141,6 +190,7 @@ add_out_of_focus(unmoved_gauss)
 # plt.show()
 
 # TODO: compute error of localization - use local maxima detection
+# - can unravel matrix, sort, and compare points AFTER getting them into x-y space (from matlab function)
 # https://stackoverflow.com/questions/9111711/get-coordinates-of-local-maxima-in-2d-array-above-certain-value
 # TODO: remove local maxima that are too close to each other, within 4 - 10 pixels
 # TODO: compute displacement & displacement error - reference 20.2.3 of plotnikov paper
