@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage as nd
 import matplotlib.ticker as tkr
-import cv2
 from my_utils import raw_points_grid, mse, struct_sim
-from scipy.signal import correlate2d
-
+from oct2py import octave
+import pprint
+octave.addpath("/home/sam/Documents/MATLAB")
 
 np.random.seed(1)
 
@@ -173,8 +173,9 @@ raw_mat = raw_points_grid(1608, 2)
 unmoved_gauss = nd.gaussian_filter(raw_mat, sigma=5.0, order=0)
 added_blurry_points = add_out_of_focus(unmoved_gauss, False)
 filtered = subtract_median(added_blurry_points, 10, False)
-processed = find_maxima(filtered)
-print(localization_error(raw_mat.reshape(1608, 1608), processed.reshape(1608, 1608)))
+out = octave.pkfnd(plt.imread("gaussian_image.png"))
+# print(processed)
+# print(localization_error(raw_mat.reshape(1608, 1608), processed.reshape(1608, 1608)))
 # moved_mat = move_points(raw_mat, move_by_px_up=100, move_by_px_down=0)
 # rarrs = [raw_mat, moved_mat]
 # subtract_median(unmoved_gauss, 10)
@@ -190,6 +191,7 @@ print(localization_error(raw_mat.reshape(1608, 1608), processed.reshape(1608, 16
 # plt.show()
 
 # TODO: compute error of localization - use local maxima detection
+# TODO: Just call the .m file from python - since using saved image I'll have to be smart about image name etc
 # - can unravel matrix, sort, and compare points AFTER getting them into x-y space (from matlab function)
 # https://stackoverflow.com/questions/9111711/get-coordinates-of-local-maxima-in-2d-array-above-certain-value
 # TODO: remove local maxima that are too close to each other, within 4 - 10 pixels
