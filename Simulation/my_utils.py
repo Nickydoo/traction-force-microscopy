@@ -140,3 +140,14 @@ def pkfnd(im, sz=None):
         out[:, 1] = mx[:, 0]
         out[:, 0] = mx[:, 1]
         return out
+
+
+def localization_error(true_im, im):
+    """
+    :param true_im: Unblurred, unfiltered image
+    :param im: Image after processing
+    :return: MSE and SSIM
+    """
+    mean_squared_err = mse(true_im, im)
+    structural_similarity = struct_sim(true_im, im)
+    return mean_squared_err, structural_similarity

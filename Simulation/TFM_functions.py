@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import openpiv.filters
-import scipy.fft
 
 from openpiv.pyprocess import extended_search_area_piv
 import openpiv.scaling
@@ -10,7 +9,7 @@ import openpiv.tools
 import openpiv.validation
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pyTFM.utilities_TFM import suppress_warnings
+from utilities_TFM import suppress_warnings
 from scipy.ndimage.filters import median_filter, gaussian_filter
 from scipy.ndimage.filters import uniform_filter
 
@@ -85,16 +84,16 @@ def ffttc_traction(u, v, pixelsize1, pixelsize2, young, sigma=0.49, filter="gaus
     # 4) calculate fourrier transform of dsiplacements
     # u_ft=np.fft.fft2(u_expand*pixelsize1*2*np.pi)
     # v_ft=np.fft.fft2(v_expand*pixelsize1*2*np.pi)   #
-    u_ft = scipy.fft.fft2(u_expand * pixelsize1)
-    v_ft = scipy.fft.fft2(v_expand * pixelsize1)
+    u_ft = np.fft.fft2(u_expand * pixelsize1)
+    v_ft = np.fft.fft2(v_expand * pixelsize1)
 
     # 4.1) calculate tractions in fourrier space T=K⁻¹*U, U=[u,v]  here with individual matrix elelemnts..
     tx_ft = kix * u_ft + kid * v_ft
     ty_ft = kid * u_ft + kiy * v_ft
 
     # 4.2) go back to real space
-    tx = scipy.fft.ifft2(tx_ft).real
-    ty = scipy.fft.ifft2(ty_ft).real
+    tx = np.fft.ifft2(tx_ft).real
+    ty = np.fft.ifft2(ty_ft).real
 
     # 5.2) cut back to oringinal shape
     tx_cut = tx[0:ax1_length, 0:ax2_length]
@@ -166,8 +165,8 @@ def ffttc_traction_pure_shear(u, v, pixelsize1, pixelsize2, h, young, sigma=0.49
     ky = np.transpose(kx)
     k = np.sqrt(kx ** 2 + ky ** 2)  # matrix with "relative" distances??#
 
-    u_ft = scipy.fft.fft2(u_expand)
-    v_ft = scipy.fft.fft2(v_expand)
+    u_ft = np.fft.fft2(u_expand)
+    v_ft = np.fft.fft2(v_expand)
 
     # 4.1) calculate tractions in fourrier space
     mu = young / (2 * (1 + sigma))
@@ -177,8 +176,8 @@ def ffttc_traction_pure_shear(u, v, pixelsize1, pixelsize2, h, young, sigma=0.49
     ty_ft[0, 0] = 0
 
     # 4.2) go back to real space
-    tx = scipy.fft.ifft2(tx_ft).real  ## maybe devide by 2pi here???
-    ty = scipy.fft.ifft2(ty_ft).real
+    tx = np.fft.ifft2(tx_ft).real  ## maybe devide by 2pi here???
+    ty = np.fft.ifft2(ty_ft).real
 
     # 5.2) cut like in script from ben
 
@@ -264,8 +263,8 @@ def ffttc_traction_finite_thickness(u, v, pixelsize1, pixelsize2, h, young, sigm
             (3 - 4 * sigma) * s_c + r / (c ** 2))
     # 4) calculate fourier transform of displacements
 
-    u_ft = scipy.fft.fft2(u_expand)
-    v_ft = scipy.fft.fft2(v_expand)
+    u_ft = np.fft.fft2(u_expand)
+    v_ft = np.fft.fft2(v_expand)
 
     '''
     #4.0*) approximation for large h according to this paper
@@ -286,8 +285,8 @@ def ffttc_traction_finite_thickness(u, v, pixelsize1, pixelsize2, h, young, sigm
     ty_ft[0, 0] = 0
 
     # 4.2) go back to real space
-    tx = scipy.fft.ifft2(tx_ft.astype(np.complex128)).real  ## maybe devide by 2pi here???
-    ty = scipy.fft.ifft2(ty_ft.astype(np.complex128)).real
+    tx = np.fft.ifft2(tx_ft.astype(np.complex128)).real  ## maybe devide by 2pi here???
+    ty = np.fft.ifft2(ty_ft.astype(np.complex128)).real
 
     # 5.2) cut like in script from ben
     tx_cut = tx[max_ind - ax1_length:max_ind, max_ind - ax2_length:max_ind]
@@ -385,7 +384,7 @@ def calculate_deformation(im1, im2, window_size=64, overlap=32, std_factor=20):
     v[mask_std] = np.nan
 
     u, v = openpiv.filters.replace_outliers(u, v, method='localmean', max_iter=10, kernel_size=2)
-    return (u, -v, mask, mask_std)  # return -v because of image inverted axis
+    return u, -v, mask, mask_std  # return -v because of image inverted axis
 
 
 def get_xy_for_quiver(u):
