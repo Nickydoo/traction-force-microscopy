@@ -1,6 +1,9 @@
 import numpy as np
 from skimage import measure
-
+import scipy.ndimage as nd
+import matplotlib.pyplot as plt
+import cv2
+from skimage.feature import peak_local_max
 np.random.seed(1)
 
 
@@ -151,3 +154,41 @@ def localization_error(true_im, im):
     mean_squared_err = mse(true_im, im)
     structural_similarity = struct_sim(true_im, im)
     return mean_squared_err, structural_similarity
+
+def subtract_median(gaussian_array, filter_size, show_plots=False):
+    """
+    Subtracts median filtered image from original image to reduce noise (step 2 of plotnikov paper)
+    Optionally shows before/after
+    :param filter_size: size of filter to be passed to scipy
+    :param gaussian_array:
+    :param show_plots:
+    :return: Fitered image
+    """
+    g_med = nd.median_filter(gaussian_array, filter_size)
+    filtered = np.abs(gaussian_array - g_med)
+    norm_image = cv2.normalize(filtered, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    if show_plots:
+        fig, ax = plt.subplots(1, 3)
+        ax[0].imshow(gaussian_array, cmap="gray")
+        ax[0].title.set_text("Before Filter")
+        ax[1].imshow(filtered, cmap="gray")
+        ax[1].title.set_text("After Filter")
+        ax[2].imshow(norm_image, cmap="gray")
+        ax[2].title.set_text("Filtered and Normalized")
+        plt.show()
+    return filtered
+
+def find_maxima_skimage(im, t):
+    """
+    Use skimage to find maxima
+    :param im: Image to be processed
+    :param t: scale factor for threshold
+    :return: x and y coordinates of maxima
+    """
+    pixel_dist_factor = 1 # factor for pixel to x y coords
+    a = 10
+    th = t * np.average(im)
+    coordinates = peak_local_max(im, min_distance=a * pixel_dist_factor, threshold_abs=th)
+    x = coordinates[:, 1]
+    y = coordinates[:, 0]
+    return x, y
