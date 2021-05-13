@@ -4,6 +4,8 @@ from tkinter import filedialog
 from scipy.ndimage import gaussian_filter
 from mpl_toolkits.mplot3d import Axes3D
 from my_utils import subtract_median, find_maxima_skimage
+from scipy.optimize import leastsq
+import scipy.linalg
 
 
 def load_files():
@@ -89,15 +91,35 @@ max_indices = np.argmax(masked_stack, axis=2)
 coords = list(zip(p_x, p_y))
 z = []
 for r, c in coords:
-    z.append(0.2*max_indices[r][c])
+    z.append(0.2 * max_indices[r][c])
+data = np.c_[p_x, p_y, z]
+mn = np.min(data, axis=0)
+mx = np.max(data, axis=0)
+X, Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
+XX = X.flatten()
+YY = Y.flatten()
+A = np.c_[data[:, 0], data[:, 1], np.ones(data.shape[0])]
+C, residuals, _, _ = scipy.linalg.lstsq(A, data[:, 2])
+Z = C[0] * X + C[1] * Y + C[2]
+# A = C[0]
+# B = C[1]
+# D = C[2]
+#
+# xyz = list(zip(p_x, p_y, z))
+# error = []
+# for x,y,z in xyz:
+#     error.append(np.linalg.norm(A*x + B*y - z + D)/np.sqrt(A**2 + B**2 + 1))
+# print(sum(error))
 
+plt.imshow(projection, cmap="gray")
+plt.show()
 fig = plt.figure()
 ax = fig.gca(projection="3d")
 ax.scatter(p_x, p_y, z)
+ax.plot_surface(X, Y, Z)
 plt.show()
 
-# plt.imshow(projection, cmap="gray")
-# plt.plot(maxima_raw[0], maxima_raw[1], 'r.')
+#
 # plt.show()
 # plt.subplot(121)
 # plt.imshow(filtered_projection, cmap="gray")
@@ -119,9 +141,33 @@ plt.show()
 
 # plt.imshow(ims[20])
 # plt.show()
-# X, Y = np.meshgrid(np.arange(0, 2048, 0.5), np.arange(0, 2048, 0.5))
-# XX = X.flatten()
-# YY = Y.flatten()
-# A = np.c_[out[:, 0], out[:, 1], np.ones(out.shape[0])]
-# C, res, rank, S = scipy.linalg.lstsq(A, out[:, 2])
-# Z = C[0] * X + C[1] * Y + C[2]
+
+# XYZ = np.array([p_x, p_y, z])
+# guess = [0, 0, 40, 2]  # A, B, C, D in Ax + By + Cz = D
+#
+#
+# def f_min(X, p):
+#     plane_xyz = p[0:3]
+#     distance = (plane_xyz * X.T).sum(axis=1) + p[3]
+#     return distance / np.linalg.norm(plane_xyz)
+#
+#
+# def residuals(params, signal, X):
+#     return f_min(X, params)
+#
+#
+# sol = leastsq(residuals, guess, args=(None, XYZ))
+# print(f'Parameters of plane are: {sol[0]}')
+# print(f'Cost function is {sol[1]}')
+# print(f'Optimization successful: {sol[-1]}')
+# print(f'Error is: {(f_min(XYZ, sol[0]) ** 2).sum()}')
+#
+#
+# def plane(params, x, y):
+#     A, B, C, D = params
+#     return (D - A * x - B * y) / C
+
+# x = y = np.linspace(0, 2048, 100)
+# X, Y = np.meshgrid(x, y)
+# zs = np.array(plane(sol[0], X.ravel(), Y.ravel()))
+# Z = zs.reshape(X.shape)
