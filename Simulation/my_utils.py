@@ -4,6 +4,7 @@ import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 import cv2
 from skimage.feature import peak_local_max
+
 np.random.seed(1)
 
 
@@ -19,6 +20,20 @@ def raw_points_grid(res, sf):
     mat = np.zeros((resolution, resolution))
     mat[x, y] = 1
     return mat
+
+
+def raw_points_grid_and_x_y(res, sf):
+    """
+    :param res: Resolution
+    :param sf: Scale factor
+    :return: matrix
+    """
+    resolution = res * sf
+    x = np.random.randint(low=0, high=resolution, size=resolution)
+    y = np.random.randint(low=0, high=resolution, size=resolution)
+    mat = np.zeros((resolution, resolution))
+    mat[x, y] = 1
+    return mat, x, y
 
 
 def ellipse(u, v, a, b):
@@ -59,90 +74,56 @@ def struct_sim(imageA, imageB):
     return measure.compare_ssim(imageA, imageB)
 
 
-def pkfnd(im, sz=None):
+def cart2pol(x, y):
     """
-    finds local maxima in an image to pixel level accuracy
-    provides a rough guess of particle centers
-    Inspired by the lmx subroutine of Grier and Crocker's algorithm
-    :param im: image to process
-    :param sz:
-    :return: N x 2 array containing [row, column] coordinates of local maxima
-    out[:, 0] are the x-coordinates of the maxima
-    out[:, 1] are the y coordinates of the maxima
-    Adapted from Eric R. Dufresne MATLAB code
+    Convert cartesian coordinates to polar
+    :param x: list/array of x coordinates
+    :param y: list/array of y coordinates
+    :return: rho, theta
     """
-    t = 1.5  # scaling factor for threshold
-    th = np.average(im)
-    ind = np.where(im > (t * th))[0]
-    print([i for i in ind if i!=0])
-    print(f'indices shape is {ind.shape}')
-    nr, nc = im.shape
-    print(f'{nr} rows')
-    print(f'{nc} columns')
-    n = len(ind)
-    if n == 0:
-        print("Nothing above threshold")
-        return []
-    mx = np.array([])
-    # convert index from find to row and column
-    rc = np.array([np.mod(ind, nr), np.floor(ind / nr) + 1]) # this should have shape ind, 2
-    print(f' first weird thing has shape {np.mod(ind, nr).shape}')
-    print(f' second weird thing has shape {(np.floor(ind/ nr)+1).shape}')
-    print(f'values of first weird thing are {np.mod(ind, nr)[0:10]}')
-    print(f'values of second weird thing are {(np.floor(ind/nr)+1)[0:10]}')
-    print(f'x y array has shape {rc.shape}')
-    for i in range(n):  # this might have to be n+1, check later
-        r = rc[0][i]
-        c = rc[1][i]
-        # print(f'r is {r}')
-        # print(f'c is {c}')
-        # check each pixel above threshold to see if it's brighter than
-        # its neighbors
-        if 0 < r < nr and 0 < c < nc:
-            """
-            if im[r, c] >= im[r - 1, c - 1] and im[r, c] >= im[r, c - 1] and im[r, c] >= im[r + 1, c - 1] and im[
-                r, c] >= im[r - 1, c] & im[r, c] >= im[r + 1, c] and im[r, c] >= im[r - 1, c + 1] and im[r, c] >= im[
-                r, c + 1] and im[r, c] >= im[r + 1, c + 1]:
-            """
-            if im[r][c] >= im[r - 1][c - 1] and im[r][c] >= im[r][c - 1] and im[r][c] >= im[r + 1][c - 1] and im[
-                r][c] >= im[r - 1][c] & im[r][c] >= im[r + 1][c] and im[r][c] >= im[r - 1][c + 1] and im[r][c] >= im[
-                r][c + 1] and im[r][c] >= im[r + 1][c + 1]:
-                print("found a maximum")
-                mx = np.concatenate([mx, np.concatenate([r, c]).T])
-    mx = mx.T
-    npks = mx.shape
-    print(npks)
-    # if size is specified, then get rid of pks within size of boundary
-    # if sz is not None and npks > 0:
-    #     # throw out all pks within sz of boundary
-    #     ind = np.argwhere(sz < mx[:, 0] < (nr - sz) and sz < mx[:, 1] < (nc - sz))
-    #     mx = mx[ind, :]
-    #     npks = mx.shape
-    if npks[0] > 1:
-        # create an image with only peaks
-        nmx = npks
-        tmp = 0 * im
-        for i in range(nmx):  # might have to be nmx + 1
-            tmp[mx[i, 0], mx[i, 1]] = im[mx[i, 0], mx[i, 1]]
-        # look in neighborhood around each peak, pick the brightest
-        for i in range(nmx):  # might have to be nmx + 1
-            roi = tmp[[mx[i, 0] - np.floor(sz / 2)]:[mx[i, 0] + (np.floor(sz / 2) + 1)],
-                  (mx(i, 1) - np.floor(sz / 2)): (
-                          mx[i, 1] + (np.floor(sz / 2) + 1))]
-            mv, indi = np.max(roi)
-            mv, indj = np.max(mv)
-            tmp[(mx[i, 0] - np.floor(sz / 2)): (mx[i, 0] + (np.floor(sz / 2) + 1)), (mx[i, 1] - np.floor(sz / 2)): (
-                    mx[i, 1] + (np.floor(sz / 2) + 1))] = 0
-            tmp[mx[i, 0] - np.floor(sz / 2) + indi[indj] - 1, mx[i, 1] - np.floor(sz / 2) + indj - 1] = mv
-        ind = np.argwhere(tmp > 0)
-        mx = [ind % nr, np.floor(ind / nr) + 1]
-    if mx.shape == (0, 0):
-        return []
-    else:
-        out = []
-        out[:, 1] = mx[:, 0]
-        out[:, 0] = mx[:, 1]
-        return out
+    rho = np.sqrt(x ** 2 + y ** 2)
+    theta = np.arctan2(y, x)
+    return rho, theta
+
+
+def circle(r, center):
+    t = np.linspace(0, 2 * np.pi, 100)
+    x = center + r * np.cos(t)
+    y = center + r * np.sin(t)
+    return x, y
+
+def distance(p1, p2):
+    """
+    Finds euclidean distance between two points
+    :param p1: Tuple (x1, y1)
+    :param p2: Tuple (x2, y2)
+    :return: Absolute euclidean distance between p1, p2
+    """
+    x1 = p1[0]
+    y1 = p1[1]
+    x2 = p2[0]
+    y2 = p2[1]
+    return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+def move_points_circle(x, y, r):
+    # move by gaussian(distance)
+    coordinates = list(zip(x, y))
+    circ_x, circ_y = circle(r, len(x)/2)
+    circ = list(zip(circ_x, circ_y))
+    new_x = []
+    displacement_x = []
+    new_y = []
+    displacement_y = []
+    for coord in coordinates:
+        nearest_point = min(circ, key=lambda d: distance(d, coord))
+        x_distance = nearest_point[0] - coord[0]
+        y_distance = nearest_point[1] - coord[1]
+        new_x.append(coord[0] + 15 * np.exp(-x_distance ** 2 / (2 * 10 ** 2)))
+        # displacement_x.append(15 * np.exp(-x_distance ** 2 / (2 * 10 ** 2)))
+        new_y.append(coord[1] + 15 * np.exp(-y_distance ** 2 / (2 * 10 ** 2)))
+        # displacement_y.append(15 * np.exp(-y_distance ** 2 / (2 * 10 ** 2)))
+    return new_x, new_y
+
 
 
 def localization_error(true_im, im):
@@ -154,6 +135,7 @@ def localization_error(true_im, im):
     mean_squared_err = mse(true_im, im)
     structural_similarity = struct_sim(true_im, im)
     return mean_squared_err, structural_similarity
+
 
 def subtract_median(gaussian_array, filter_size, show_plots=False):
     """
@@ -178,6 +160,7 @@ def subtract_median(gaussian_array, filter_size, show_plots=False):
         plt.show()
     return filtered
 
+
 def find_maxima_skimage(im, t):
     """
     Use skimage to find maxima
@@ -185,10 +168,33 @@ def find_maxima_skimage(im, t):
     :param t: scale factor for threshold
     :return: x and y coordinates of maxima
     """
-    pixel_dist_factor = 1 # factor for pixel to x y coords
+    pixel_dist_factor = 1  # factor for pixel to x y coords
     a = 10
     th = t * np.average(im)
     coordinates = peak_local_max(im, min_distance=a * pixel_dist_factor, threshold_abs=th)
     x = coordinates[:, 1]
     y = coordinates[:, 0]
     return x, y
+
+
+def get_x_y(raw_img):
+    xvec, yvec = np.nonzero(raw_img)
+    return xvec, yvec
+
+
+def x_y_to_img(xvec, yvec):
+    mat = np.zeros((len(xvec), len(yvec)))
+    filter_xvec = []
+    filter_yvec = []
+    for x in xvec:
+        if x >= len(xvec):
+            filter_xvec.append(len(xvec)-1)
+        else:
+            filter_xvec.append(x)
+    for y in yvec:
+        if y >= len(yvec):
+            filter_yvec.append(len(yvec)-1)
+        else:
+            filter_yvec.append(y)
+    np.add.at(mat, (tuple(filter_xvec), tuple(filter_yvec)), 1)
+    return mat
