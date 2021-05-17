@@ -118,3 +118,123 @@ def find_maxima_matlab(im, sz=0):
     th = t * np.average(my_im)
     out = octave.pkfnd_octave(my_im, th, sz)
     return out
+
+
+def pkfnd(im, sz=None):
+    """
+    finds local maxima in an image to pixel level accuracy
+    provides a rough guess of particle centers
+    Inspired by the lmx subroutine of Grier and Crocker's algorithm
+    :param im: image to process
+    :param sz:
+    :return: N x 2 array containing [row, column] coordinates of local maxima
+    out[:, 0] are the x-coordinates of the maxima
+    out[:, 1] are the y coordinates of the maxima
+    Adapted from Eric R. Dufresne MATLAB code
+    """
+    t = 1.5  # scaling factor for threshold
+    th = np.average(im)
+    ind = np.where(im > (t * th))[0]
+    print([i for i in ind if i != 0])
+    print(f'indices shape is {ind.shape}')
+    nr, nc = im.shape
+    print(f'{nr} rows')
+    print(f'{nc} columns')
+    n = len(ind)
+    if n == 0:
+        print("Nothing above threshold")
+        return []
+    mx = np.array([])
+    # convert index from find to row and column
+    rc = np.array([np.mod(ind, nr), np.floor(ind / nr) + 1])  # this should have shape ind, 2
+    print(f' first weird thing has shape {np.mod(ind, nr).shape}')
+    print(f' second weird thing has shape {(np.floor(ind / nr) + 1).shape}')
+    print(f'values of first weird thing are {np.mod(ind, nr)[0:10]}')
+    print(f'values of second weird thing are {(np.floor(ind / nr) + 1)[0:10]}')
+    print(f'x y array has shape {rc.shape}')
+    for i in range(n):  # this might have to be n+1, check later
+        r = rc[0][i]
+        c = rc[1][i]
+        # print(f'r is {r}')
+        # print(f'c is {c}')
+        # check each pixel above threshold to see if it's brighter than
+        # its neighbors
+        if 0 < r < nr and 0 < c < nc:
+            """
+            if im[r, c] >= im[r - 1, c - 1] and im[r, c] >= im[r, c - 1] and im[r, c] >= im[r + 1, c - 1] and im[
+                r, c] >= im[r - 1, c] & im[r, c] >= im[r + 1, c] and im[r, c] >= im[r - 1, c + 1] and im[r, c] >= im[
+                r, c + 1] and im[r, c] >= im[r + 1, c + 1]:
+            """
+            if im[r][c] >= im[r - 1][c - 1] and im[r][c] >= im[r][c - 1] and im[r][c] >= im[r + 1][c - 1] and im[
+                r][c] >= im[r - 1][c] & im[r][c] >= im[r + 1][c] and im[r][c] >= im[r - 1][c + 1] and im[r][c] >= im[
+                r][c + 1] and im[r][c] >= im[r + 1][c + 1]:
+                print("found a maximum")
+                mx = np.concatenate([mx, np.concatenate([r, c]).T])
+    mx = mx.T
+    npks = mx.shape
+    print(npks)
+    # if size is specified, then get rid of pks within size of boundary
+    # if sz is not None and npks > 0:
+    #     # throw out all pks within sz of boundary
+    #     ind = np.argwhere(sz < mx[:, 0] < (nr - sz) and sz < mx[:, 1] < (nc - sz))
+    #     mx = mx[ind, :]
+    #     npks = mx.shape
+    if npks[0] > 1:
+        # create an image with only peaks
+        nmx = npks
+        tmp = 0 * im
+        for i in range(nmx):  # might have to be nmx + 1
+            tmp[mx[i, 0], mx[i, 1]] = im[mx[i, 0], mx[i, 1]]
+        # look in neighborhood around each peak, pick the brightest
+        for i in range(nmx):  # might have to be nmx + 1
+            roi = tmp[[mx[i, 0] - np.floor(sz / 2)]:[mx[i, 0] + (np.floor(sz / 2) + 1)],
+                  (mx(i, 1) - np.floor(sz / 2)): (
+                          mx[i, 1] + (np.floor(sz / 2) + 1))]
+            mv, indi = np.max(roi)
+            mv, indj = np.max(mv)
+            tmp[(mx[i, 0] - np.floor(sz / 2)): (mx[i, 0] + (np.floor(sz / 2) + 1)), (mx[i, 1] - np.floor(sz / 2)): (
+                    mx[i, 1] + (np.floor(sz / 2) + 1))] = 0
+            tmp[mx[i, 0] - np.floor(sz / 2) + indi[indj] - 1, mx[i, 1] - np.floor(sz / 2) + indj - 1] = mv
+        ind = np.argwhere(tmp > 0)
+        mx = [ind % nr, np.floor(ind / nr) + 1]
+    if mx.shape == (0, 0):
+        return []
+    else:
+        out = []
+        out[:, 1] = mx[:, 0]
+        out[:, 0] = mx[:, 1]
+        return out
+
+
+def gaussian(height, center_x, center_y, width_x, width_y):
+    """Returns a gaussian function with the given parameters"""
+    width_x = float(width_x)
+    width_y = float(width_y)
+    return lambda x, y: height * np.exp(
+        -(((center_x - x) / width_x) ** 2 + ((center_y - y) / width_y) ** 2) / 2)
+
+
+def moments(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments """
+    total = data.sum()
+    X, Y = np.indices(data.shape)
+    x = (X * data).sum() / total
+    y = (Y * data).sum() / total
+    col = data[:, int(y)]
+    width_x = np.sqrt(np.abs((np.arange(col.size) - x) ** 2 * col).sum() / col.sum())
+    row = data[int(x), :]
+    width_y = np.sqrt(np.abs((np.arange(row.size) - y) ** 2 * row).sum() / row.sum())
+    height = data.max()
+    return height, x, y, width_x, width_y
+
+
+def fitgaussian(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) -
+                                       data)
+    p, success = optimize.leastsq(errorfunction, params)
+    return p
