@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def reg_fttc(u, v, L, E, s, pix):
     """
     Calculates traction field using regularized fourier transform traction cytometry
@@ -11,13 +12,13 @@ def reg_fttc(u, v, L, E, s, pix):
     :param pix: pixel size in meters/pixel of image (from microscope)
     :return:
     """
-    V = 2*(1+s)/E # constant from beginning of eq 20.6 for ease of calculation
+    V = 2 * (1 + s) / E  # constant from beginning of eq 20.6 for ease of calculation
     # must zero pad first to get regular grid
     ax1_length = np.shape(u)[0]
     ax2_length = np.shape(u)[1]
     max_ind = int(np.max((ax1_length, ax2_length)))
     if max_ind % 2 != 0:
-        max_ind += 1 # make sure it is even
+        max_ind += 1  # make sure it is even
     u_expand = np.zeros((max_ind, max_ind))
     v_expand = np.zeros((max_ind, max_ind))
 
@@ -27,7 +28,7 @@ def reg_fttc(u, v, L, E, s, pix):
     kx = np.append(kx1, kx2, axis=1) * 2 * np.pi
 
     ky = np.transpose(kx)
-    k = np.sqrt(kx**2 + ky**2)/(pix * max_ind)
+    k = np.sqrt(kx ** 2 + ky ** 2) / (pix * max_ind)
 
     # fourier transforms of displacement
     u_ft = np.fft.fft2(u_expand * pix)
