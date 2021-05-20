@@ -11,6 +11,7 @@ def reg_fttc(u, v, L, E, s, pix):
     :param pix: pixel size in meters/pixel of image (from microscope)
     :return:
     """
+    V = 2*(1+s)/E # constant from beginning of eq 20.6 for ease of calculation
     # must zero pad first to get regular grid
     ax1_length = np.shape(u)[0]
     ax2_length = np.shape(u)[1]
@@ -27,3 +28,7 @@ def reg_fttc(u, v, L, E, s, pix):
 
     ky = np.transpose(kx)
     k = np.sqrt(kx**2 + ky**2)/(pix * max_ind)
+
+    # fourier transforms of displacement
+    u_ft = np.fft.fft2(u_expand * pix)
+    v_ft = np.fft.fft2(v_expand * pix)
