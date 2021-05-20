@@ -21,3 +21,4 @@ plt.imshow(orig_mat)
 plt.subplot(122)
 plt.imshow(mat)
 plt.show()
+
