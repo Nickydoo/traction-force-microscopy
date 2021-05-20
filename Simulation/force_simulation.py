@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 from my_utils import raw_points_grid
 import openpiv.syn
 
+# take rectangle in middle
+# for points on the border, move by a lot
+# for points further in, move by a little
+# save displacements for comparison
+
 
 def setup_geometry(im_shape=(300, 300), shape_size=100):
     matrix = np.zeros(im_shape, dtype=int)

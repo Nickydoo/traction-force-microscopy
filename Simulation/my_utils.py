@@ -92,6 +92,7 @@ def circle(r, center):
     y = center + r * np.sin(t)
     return x, y
 
+
 def distance(p1, p2):
     """
     Finds euclidean distance between two points
@@ -105,25 +106,27 @@ def distance(p1, p2):
     y2 = p2[1]
     return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
+
 def move_points_circle(x, y, r):
     # move by gaussian(distance)
     coordinates = list(zip(x, y))
-    circ_x, circ_y = circle(r, len(x)/2)
+    circ_x, circ_y = circle(r, len(x) / 2)
     circ = list(zip(circ_x, circ_y))
     new_x = []
     displacement_x = []
-    new_y = []
     displacement_y = []
+    new_y = []
+    gaussian_amp = 5
+    gaussian_sigma = 2
     for coord in coordinates:
         nearest_point = min(circ, key=lambda d: distance(d, coord))
         x_distance = nearest_point[0] - coord[0]
         y_distance = nearest_point[1] - coord[1]
-        new_x.append(coord[0] + 15 * np.exp(-x_distance ** 2 / (2 * 10 ** 2)))
-        # displacement_x.append(15 * np.exp(-x_distance ** 2 / (2 * 10 ** 2)))
-        new_y.append(coord[1] + 15 * np.exp(-y_distance ** 2 / (2 * 10 ** 2)))
-        # displacement_y.append(15 * np.exp(-y_distance ** 2 / (2 * 10 ** 2)))
-    return new_x, new_y
-
+        new_x.append(coord[0] + gaussian_amp * np.exp(-x_distance ** 2 / (2 * gaussian_sigma ** 2)))
+        displacement_x.append(gaussian_amp * np.exp(-x_distance ** 2 / (2 * gaussian_sigma ** 2)))
+        new_y.append(coord[1] + gaussian_amp * np.exp(-y_distance ** 2 / (2 * gaussian_sigma ** 2)))
+        displacement_y.append(gaussian_amp * np.exp(-y_distance ** 2 / (2 * gaussian_sigma ** 2)))
+    return new_x, new_y, np.array(displacement_x), np.array(displacement_y)
 
 
 def localization_error(true_im, im):
@@ -188,13 +191,28 @@ def x_y_to_img(xvec, yvec):
     filter_yvec = []
     for x in xvec:
         if x >= len(xvec):
-            filter_xvec.append(len(xvec)-1)
+            filter_xvec.append(len(xvec) - 1)
         else:
             filter_xvec.append(x)
     for y in yvec:
         if y >= len(yvec):
-            filter_yvec.append(len(yvec)-1)
+            filter_yvec.append(len(yvec) - 1)
         else:
             filter_yvec.append(y)
     np.add.at(mat, (tuple(filter_xvec), tuple(filter_yvec)), 1)
     return mat
+def shift_by_one(im):
+    quarter_length = im.shape[0] // 4
+    sub = im[quarter_length:3 * quarter_length, quarter_length:3 * quarter_length].copy()
+    first_half = sub[len(sub) // 4:len(sub) // 2, :].copy()
+    second_half = sub[3 * len(sub) // 4:, :]
+    shift_down = np.roll(np.identity(len(first_half)), -1)
+    shift_up = np.roll(np.identity(len(second_half)), 1)
+    shift_up[:, -1] = 0
+    shift_down[:, -1] = 0
+    shifted_down = shift_down @ first_half
+    shifted_up = shift_up @ second_half
+    sub[len(sub) // 4:len(sub) // 2, :] = shifted_down
+    sub[3 * len(sub) // 4:, :] = shifted_up
+    im[quarter_length:3 * quarter_length, quarter_length:3 * quarter_length] = sub
+    return im

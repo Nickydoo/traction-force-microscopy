@@ -1,9 +1,10 @@
 from scipy.signal import correlate2d
+import scipy.optimize as optimize
 from scipy.ndimage import gaussian_filter
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from my_utils import find_maxima_skimage, move_points_circle, raw_points_grid_and_x_y, x_y_to_img
-from openpiv import tools, pyprocess, validation, filters, scaling
 
 # move points in top left corner right by 5 pixels
 # moved_right = np.roll(raw_before[0:201, 0:201], 5)
@@ -12,26 +13,31 @@ from openpiv import tools, pyprocess, validation, filters, scaling
 
 
 raw_before, raw_x, raw_y = raw_points_grid_and_x_y(1608, 1)
-moved_x, moved_y = move_points_circle(raw_x, raw_y, 150)
+moved_x, moved_y, disp_x, disp_y = move_points_circle(raw_x, raw_y, 150)
 moved_x_r = [int(round(num)) for num in moved_x]
 moved_y_r = [int(round(num)) for num in moved_y]
 raw_moved = x_y_to_img(moved_x_r, moved_y_r)
 gaussian_before = gaussian_filter(raw_before, sigma=5, order=0)
 gaussian_after = gaussian_filter(raw_moved, sigma=5, order=0)
-plt.subplot(121)
-plt.imshow(gaussian_before, cmap="gray")
-plt.subplot(122)
-plt.imshow(gaussian_after, cmap="gray")
-# plt.show()
-
+# plt.subplot(121)
+# plt.imshow(gaussian_before, cmap="gray")
+# plt.subplot(122)
+# plt.imshow(gaussian_after, cmap="gray")
+# # plt.show()
+#
+# plt.subplot(121)
 plt.plot(raw_x, raw_y, 'r.')
 plt.plot(moved_x_r, moved_y_r, 'g.')
-# plt.show()
+plt.show()
+#
+# plt.subplot(122)
+# x_locations_before, y_locations_before = find_maxima_skimage(gaussian_before, 1)
 
 
-x_locations_before, y_locations_before = find_maxima_skimage(gaussian_before, 1)
-xafter, yafter = find_maxima_skimage(gaussian_after, 1)
-
+# xafter, yafter = find_maxima_skimage(gaussian_after, 1)
+# plt.plot(x_locations_before, y_locations_before, 'r.')
+# plt.plot(xafter, yafter, 'g.')
+# # plt.show()
 
 
 def cross_correlate(before, after, xbefore, ybefore):
@@ -44,24 +50,38 @@ def cross_correlate(before, after, xbefore, ybefore):
     :param after: after picture
     :return:
     """
-    iw = 15
+    iw = 32
     coords = list(zip(xbefore, ybefore))
-    clist = []
     xlist, ylist, u, v = [], [], [], []
+    subpixel_x_d, subpixel_y_d = [], []
     for x, y in coords:
         ia = after[x:x + iw, y:y + iw]
         ib = before[x:x + iw, y:y + iw]
         c = correlate2d(ib - ib.mean(), ia - ia.mean())
-        clist.append(c)
         i, j = np.unravel_index(c.argmax(), c.shape)
-        xlist.append(x - iw / 2.)
-        ylist.append(y - iw / 2.)
+        xlist.append(x - iw)
+        ylist.append(y - iw)
         u.append(i - iw / 2. - 1)
         v.append(j - iw / 2. - 1)
-    print(len(clist))
+        _, actual_x, actual_y, _, _ = fitgaussian(c)
+        subpixel_x_d.append(actual_x)
+        subpixel_y_d.append(actual_y)
+    return xlist, ylist, u, v, subpixel_x_d, subpixel_y_d
 
-#cross_correlate(gaussian_before, gaussian_after, x_locations_before, y_locations_before)
+# cross_correlate(gaussian_before, gaussian_after, x_locations_before, y_locations_before)
 
+
+
+
+
+
+
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection="3d")
+# cx, cy = np.meshgrid(range(c.shape[0]), range(c.shape[1]))
+# ax.plot_surface(cx, cy, c)
+# plt.show()
 # winsize = 24 # pixels
 # searchsize = 64  # pixels, search in image B
 # overlap = 12 # pixels
