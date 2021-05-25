@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def reg_fttc(u, v, L, E, s, pix, regularized=True):
+def reg_fttc(u, v, L, E, s, pix, regularized):
     """
     Calculates traction field using regularized fourier transform traction cytometry
     :param u: deformation field in x direction
@@ -54,14 +54,15 @@ def reg_fttc(u, v, L, E, s, pix, regularized=True):
         Ginv_xx[0, 0] = 0
         Ginv_yy[0, 0] = 0
         Ginv_xy[0, 0] = 0
-        Ginv_xy[max_ind / 2 + 1, :] = 0
-        Ginv_xy[:, max_ind / 2 + 1] = 0
+        Ginv_xy[max_ind // 2 + 1, :] = 0
+        Ginv_xy[:, max_ind // 2 + 1] = 0
         # calculate traction in fourier space (step 5)
         Ftfx = Ginv_xx * u_ft + Ginv_xy * v_ft
         Ftfy = Ginv_xy * u_ft + Ginv_yy * v_ft
         # transform back to real space (step 6)
         tx = np.fft.ifft2(Ftfx).real
         ty = np.fft.ifft2(Ftfy).real
+        return tx, ty
     else:
         u_shift = (u - np.mean(u))
         v_shift = (v - np.mean(v))
@@ -118,6 +119,7 @@ def reg_fttc(u, v, L, E, s, pix, regularized=True):
 
         tx_cut = tx[0:ax1_length, 0:ax2_length]
         ty_cut = ty[0:ax1_length, 0:ax2_length]
+        return tx_cut, ty_cut
 
 
 
