@@ -1,9 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
 from scipy.ndimage import gaussian_filter
-from skimage.measure import regionprops
-import matplotlib.pyplot as plt
-from skimage.draw import circle
 
 
 def raw_points_grid(res):
@@ -20,6 +17,14 @@ def raw_points_grid(res):
 
 
 def add_out_of_focus(img, moved_img, density, sigma):
+    """
+    Adds out of focus areas to image
+    :param img: image without moved points (base image)
+    :param moved_img: image with moved points
+    :param density: density/how sparse the out of focus regions are (lower -> less regions)
+    :param sigma: how blurry the regions will be (higher -> more blurry), around 100 seems good for this
+    :return: unmoved image with blurry regions, moved image with blurry regions
+    """
     nrows = img.shape[0]
     ncols = img.shape[1]
     points = sp.rand(nrows, ncols, density=density).A
@@ -49,6 +54,12 @@ def gen_img(size, density, sigma, radius, move_by_px):
 
 
 def x_y_to_img(xvec, yvec):
+    """
+    Turns lists of x and y coordinates into a boolean image/array
+    :param xvec: x coordinates
+    :param yvec: y coordinates
+    :return: boolean image/array
+    """
     mat = np.zeros((len(xvec), len(yvec)))
     filter_xvec = []
     filter_yvec = []
@@ -67,6 +78,12 @@ def x_y_to_img(xvec, yvec):
 
 
 def create_circular_mask(img, radius):
+    """
+    Create a circular mask for an image
+    :param img: image that mask will be applied to (used to get center coordinates)
+    :param radius: radius of circle
+    :return: mask
+    """
     h = img.shape[1]
     w = img.shape[0]
     center = (w // 2, h // 2)
@@ -118,13 +135,3 @@ def move_points_circle(raw, radius, move_by_px):
     res[x, y] = 0
     res[new_xs, new_ys] = 1
     return res
-
-
-before, after = gen_img(1608, 0.25, 100, 200, 100)
-plt.subplot(121)
-plt.imshow(before, cmap="gray")
-plt.subplot(122)
-plt.imshow(after, cmap="gray")
-plt.show()
-
-# filter x and y greater than or less than center, don't need to do 2 masks
