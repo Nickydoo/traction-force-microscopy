@@ -238,3 +238,13 @@ def fitgaussian(data):
                                        data)
     p, success = optimize.leastsq(errorfunction, params)
     return p
+
+def make_images():
+    raw_before, raw_x, raw_y = raw_points_grid_and_x_y(1608, 1)
+    moved_x, moved_y, displacement_x, displacement_y = move_points_circle(raw_x, raw_y, 150)
+    moved_x_r = [int(round(num)) for num in moved_x]
+    moved_y_r = [int(round(num)) for num in moved_y]
+    raw_moved = x_y_to_img(moved_x_r, moved_y_r)
+    gaussian_before = gaussian_filter(raw_before, sigma=5, order=0)
+    gaussian_after = gaussian_filter(raw_moved, sigma=5, order=0)
+    return gaussian_before, gaussian_after, displacement_x, displacement_y
