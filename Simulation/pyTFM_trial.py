@@ -7,28 +7,28 @@ from openpiv.filters import replace_outliers
 from plotting import show_quiver
 import matplotlib.pyplot as plt
 from synthetic_image import gen_img
+from tkinter import filedialog
 import numpy as np
 
 
-def get_displacements(img1, img2, overlap: int, window_size: int, normalized: bool = True):
+def get_displacements(img1, img2, overlap: int, window_size: int):
     """
     :param img1: before image - image with cell on substrate
     :param img2: after image - image after cell has been removed
     :param overlap: how much the cross correlation windows will overlap (must be > window_size/2)
     :param window_size: size of search windows for cross correlation
-    :param normalized: Whether to normalize search windows, True is more accurate but takes longer
     :return: dictionary with x,y coordinates of search windows and u (x-component) and v (y-component) of displacement
     """
     u, v, sig2noise = extended_search_area_piv(img1, img2, window_size=window_size, overlap=overlap, dt=1,
                                                subpixel_method="gaussian", search_area_size=window_size,
-                                               sig2noise_method="peak2peak", normalized_correlation=normalized)
+                                               sig2noise_method="peak2peak")
 
     u, v, mask = sig2noise_val(u, v, sig2noise, threshold=1.05)
 
     def_abs = np.sqrt(u ** 2 + v ** 2)
     m = np.nanmean(def_abs)
     std = np.nanstd(def_abs)
-    threshold = std * 20 + m
+    threshold = std * 1 + m
     mask_std = def_abs > threshold
     u[mask_std] = np.nan
     v[mask_std] = np.nan
@@ -64,13 +64,12 @@ def total_strain_energy(strain_energy, mask):
     return np.sum(strain_energy[mask])
 
 
-im_before, im_after = gen_img(1608, 0.25, 100, 100, 20)
-disps = get_displacements(im_before, im_after, window_size=64)
-u, v = disps['u'], disps['v']
-tx, ty = reg_fttc(u, v, 10e-4, 4000, 0.49, pix=120000, regularized=False)
-print(tx.shape)
-fig, ax = show_quiver(tx, ty)
-plt.show()
+# im_before, im_after = gen_img(1608, 0.25, 100, 100, 20)
+# disps = get_displacements(im_before, im_after, window_size=100, overlap=60)
+# u, v = disps['u'], disps['v']
+# tx, ty = reg_fttc(u, v, 10e-4, 4000, 0.49, pix=0.12, regularized=False)
+# fig, ax = show_quiver(tx, ty)
+# plt.show()
 
 # for wsize in range(32, 16*10+1, 16):
 #     gauss_before = gaussian_filter(im_before, sigma=5)
