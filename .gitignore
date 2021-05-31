@@ -1,3 +1,6 @@
 
 Data/Raw/left well.nd2
 Data/Raw/middle well.nd2
+.idea/
+Simulation/.idea/
+Simulation/.__pycache__/
