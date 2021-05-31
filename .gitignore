@@ -4,3 +4,6 @@ Data/Raw/middle well.nd2
 .idea/
 Simulation/.idea/
 Simulation/.__pycache__/
+TFM/__pycache__/DisplacementTracking.cpython-38.pyc
+TFM/__pycache__/PlottingFunctions.cpython-38.pyc
+TFM/__pycache__/TractionCalculation.cpython-38.pyc

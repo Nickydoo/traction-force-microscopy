@@ -11,7 +11,7 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
     :param s: Poisson's ratio
     :param pix: pixel size in meters/pixel of image (from microscope)
     :param regularized: whether or not to apply regularization (uses MATLAB code)
-    :return:
+    :return: traction fields in x and y directions
     """
     if regularized:
         V = 2 * (1 + s) / E
@@ -120,3 +120,27 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
         tx_cut = tx[0:ax1_length, 0:ax2_length]
         ty_cut = ty[0:ax1_length, 0:ax2_length]
         return tx_cut, ty_cut
+
+
+def strain_energy_points(u, v, tx, ty, pix):
+    """
+    :param u: displacement field in x direction
+    :param v: displacement field in y direction
+    :param tx: tractions in x direction
+    :param ty: tractions in y direction
+    :param pix: pixel-distance factor
+    :return: pointwise energy (use total_strain_energy for magnitude)
+    """
+    pix *= 10e-6
+    energy = ((pix ** 2) / 2) * (tx * u * pix + ty * v * pix)
+    return energy
+
+
+def total_strain_energy(strain_energy, mask):
+    """
+    Calculate total strain energy
+    :param strain_energy: from strain_energy_points
+    :param mask: mask of cell boundary
+    :return: total strain energy
+    """
+    return np.sum(strain_energy[mask])
