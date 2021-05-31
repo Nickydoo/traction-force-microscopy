@@ -11,7 +11,7 @@ from tkinter import filedialog
 import numpy as np
 
 
-def get_displacements(img1, img2, overlap: int, window_size: int):
+def get_displacements(img1, img2, window_size: int, overlap: int):
     """
     :param img1: before image - image with cell on substrate
     :param img2: after image - image after cell has been removed
