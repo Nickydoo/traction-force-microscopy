@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.ndimage.filters import gaussian_filter
 
 
 def reg_fttc(u, v, L, E, s, pix, regularized):
@@ -14,6 +15,7 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
     :return: traction fields in x and y directions
     """
     if regularized:
+        v *= -1
         V = 2 * (1 + s) / E
         # must zero pad first to get regular grid (step 1)
         ax1_length = np.shape(u)[0]
@@ -64,9 +66,9 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
         ty = np.fft.ifft2(Ftfy).real
         return tx, ty
     else:
+        v *= -1
         u_shift = (u - np.mean(u))
         v_shift = (v - np.mean(v))
-        V = 2 * (1 + s) / E
         # must zero pad first to get regular grid (step 1)
         ax1_length = np.shape(u_shift)[0]
         ax2_length = np.shape(u_shift)[1]
@@ -82,13 +84,10 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
         kx1 = np.array([list(range(0, int(max_ind / 2), 1)), ] * int(max_ind))
         kx2 = np.array([list(range(-int(max_ind / 2), 0, 1)), ] * int(max_ind))
         kx = np.append(kx1, kx2, axis=1) * 2 * np.pi
+        # F(kx) = 1/2pi * integral(e^(i*kx*x))dk
 
         ky = np.transpose(kx)
         k = np.sqrt(kx ** 2 + ky ** 2) / (pix * max_ind)
-
-        # fourier transforms of displacement (step 3)
-        u_ft = np.fft.fft2(u_expand * pix)
-        v_ft = np.fft.fft2(v_expand * pix)
         # calculate angle between k and kx
         alpha = np.arctan2(ky, kx)
         alpha[0, 0] = np.pi / 2
@@ -119,7 +118,10 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
 
         tx_cut = tx[0:ax1_length, 0:ax2_length]
         ty_cut = ty[0:ax1_length, 0:ax2_length]
-        return tx_cut, ty_cut
+        fs = max_ind / 50
+        tx_filter = gaussian_filter(tx_cut, sigma=fs)
+        ty_filter = gaussian_filter(ty_cut, sigma=fs)
+        return tx_filter, ty_filter
 
 
 def strain_energy_points(u, v, tx, ty, pix):
