@@ -23,7 +23,7 @@ def get_displacements(img1, img2, window_size: int, overlap: int):
     def_abs = np.sqrt(u ** 2 + v ** 2)
     m = np.nanmean(def_abs)
     std = np.nanstd(def_abs)
-    threshold = std * 10 + m
+    threshold = std * 20 + m
     mask_std = def_abs > threshold
     u[mask_std] = np.nan
     v[mask_std] = np.nan
