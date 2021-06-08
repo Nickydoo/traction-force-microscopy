@@ -33,7 +33,7 @@ def display_vector_field(x, y, u, v, window_size, image=None):
     ymax = np.amax(y) + window_size / 2
     mag = np.sqrt(u ** 2 + v ** 2)
     if image is not None:
-        ax.imshow(image, extent=[0.0, xmax, 0.0, ymax])
+        ax.imshow(image, extent=[0.0, xmax, 0.0, ymax], cmap="gray")
         quiv = ax.quiver(x, y, u, v, mag)
         fig.colorbar(quiv)
     else:
