@@ -20,14 +20,18 @@ def crop(im, x_shift, y_shift):
         im = im[int(np.ceil(-y_shift)):, :]
     else:
         im = im[:-int(np.ceil(y_shift)), :]
-    return np.array(im, dtype=np.float)
+    return np.array(im, dtype=float)
 
 
-def correct_shift(im1, im2):
+def correct_shift(im1, im2, cell_image=None):
     vals = phase_cross_correlation(im1, im2, upsample_factor=100)
     y_shift = vals[0][0]
     x_shift = vals[0][1]
     shifted_im1 = shift(im1, shift=(-y_shift, -x_shift), order=5)
     new_im1 = normalize(crop(shifted_im1, x_shift, y_shift))
     new_im2 = normalize(crop(im2, x_shift, y_shift))
-    return new_im1, new_im2
+    if cell_image is not None:
+        new_cell_image = normalize((crop(cell_image, x_shift, y_shift)))
+        return new_im1, new_im2, new_cell_image
+    else:
+        return new_im1, new_im2, None

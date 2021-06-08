@@ -7,3 +7,138 @@ Simulation/.__pycache__/
 TFM/__pycache__/DisplacementTracking.cpython-38.pyc
 TFM/__pycache__/PlottingFunctions.cpython-38.pyc
 TFM/__pycache__/TractionCalculation.cpython-38.pyc
+Data/C1-right well.tif
+Data/C1-right well001.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/macros/ForBeads-CorrectDriftNGlaring-Align.ijm
+Data/PDMS Substrate Data/Supplemental Dataset 1/macros/OutputTxtFilesForFTTC2.m
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads-0001.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads-0002.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads-0003.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads-0004.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads-0005.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_beads.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_ph.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/Movies/20160325_6_refbeads.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ConcatenatedStack.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV001.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV002.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV003.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV004.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV005.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV006.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV007.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV008.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV009.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/ForPIV010.tif
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/FTTCparameters_PIV1.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/FTTCparameters_PIV2.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/FTTCparameters_PIV3.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/FTTCparameters_PIV4.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/FTTCparameters_PIV5.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIV1.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIV2.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIV3.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIV4.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIV5.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/PIVlab_session.mat
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/Traction_PIV1.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/Traction_PIV2.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/Traction_PIV3.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/Traction_PIV4.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/Traction_PIV5.txt
+Data/PDMS Substrate Data/Supplemental Dataset 1/output/TransformationMatrices.txt
+Data/Right well/03after.tif
+Data/Right well/03before.tif
+Data/Right well/03bf_before.tif
+Data/Right well/03deformation.png
+Data/Right well/03traction.png
+Data/Right well/03tx.npy
+Data/Right well/03ty.npy
+Data/Right well/03u.npy
+Data/Right well/03v.npy
+Data/Right well/database.cdb
+Data/Right well/out0.txt
+Data/right_well_after_corr.tif
+Data/right_well_before_corr.tif
+Data/right_well_cells.tif
+Data/right_well_Stack.tif
+Data/Second attempt/left different one trypsin.nd2
+Data/Second attempt/left different one.nd2
+Data/Second attempt/left different one001.nd2
+Data/Second attempt/left.nd2
+Data/Second attempt/left001.nd2
+Data/Second attempt/left002.nd2
+Data/Second attempt/left003.nd2
+Data/Second attempt/left004.nd2
+Data/Second attempt/left005.nd2
+Data/Second attempt/middle trypsin.nd2
+Data/Second attempt/middle trypsin001.nd2
+Data/Second attempt/middle trypsin002.nd2
+Data/Second attempt/middle trypsin003.nd2
+Data/Second attempt/middle.nd2
+Data/Second attempt/middle001.nd2
+Data/Second attempt/middle002.nd2
+Data/Second attempt/middle003.nd2
+Data/Second attempt/righ trypsin.nd2
+Data/Second attempt/righ trypsin001.nd2
+Data/Second attempt/righ trypsin002.nd2
+Data/Second attempt/right.nd2
+Data/Second attempt/right001.nd2
+Data/Second attempt/right002.nd2
+Data/Second attempt/right003.nd2
+Data/Second attempt/Split/left different one trypsin.tif
+Data/Second attempt/Split/left different one.tif
+Data/Second attempt/Split/left different one001.tif
+Data/Second attempt/Split/left.tif
+Data/Second attempt/Split/left001.tif
+Data/Second attempt/Split/left002.tif
+Data/Second attempt/Split/left003.tif
+Data/Second attempt/Split/left004.tif
+Data/Second attempt/Split/left005.tif
+Data/Second attempt/Split/middle trypsin.tif
+Data/Second attempt/Split/middle trypsin001.tif
+Data/Second attempt/Split/middle trypsin002.tif
+Data/Second attempt/Split/middle trypsin003.tif
+Data/Second attempt/Split/middle.tif
+Data/Second attempt/Split/middle001.tif
+Data/Second attempt/Split/middle002.tif
+Data/Second attempt/Split/middle003.tif
+Data/Second attempt/Split/pyTFM trial/04after.tif
+Data/Second attempt/Split/pyTFM trial/04before.tif
+Data/Second attempt/Split/pyTFM trial/04bf_before.tif
+Data/Second attempt/Split/pyTFM trial/04deformation.png
+Data/Second attempt/Split/pyTFM trial/04traction.png
+Data/Second attempt/Split/pyTFM trial/04tx.npy
+Data/Second attempt/Split/pyTFM trial/04ty.npy
+Data/Second attempt/Split/pyTFM trial/04u.npy
+Data/Second attempt/Split/pyTFM trial/04v.npy
+Data/Second attempt/Split/pyTFM trial/database.cdb
+Data/Second attempt/Split/pyTFM trial/out.txt
+Data/Second attempt/Split/righ trypsin.tif
+Data/Second attempt/Split/righ trypsin001.tif
+Data/Second attempt/Split/righ trypsin002.tif
+Data/Second attempt/Split/right.tif
+Data/Second attempt/Split/right001.tif
+Data/Second attempt/Split/right002.tif
+Data/Second attempt/Split/right003.tif
+Data/Stack_middle_well.tif
+Data/UW Data/04after.tif
+Data/UW Data/04before.tif
+Data/UW Data/04bf_before.tif
+Data/UW Data/neutrophil/FTTCparameters_PIV_neutrophil_000_001_stack.txt
+Data/UW Data/neutrophil/neutrophil_000_middle.tif
+Data/UW Data/neutrophil/neutrophil_001_middle.tif
+Data/UW Data/neutrophil/neutrophil_002_middle.tif
+Data/UW Data/neutrophil/PIV_neutrophil_000_001_stack.txt
+Data/UW Data/neutrophil/Traction_PIV_neutrophil_000_001_stack.txt
+TFM Articles/1-s2.0-S000634950870780X-main.pdf
+TFM Articles/1-s2.0-S0092867412014195-main.pdf
+TFM Articles/901.full.pdf
+TFM Articles/Epifluorescence-based_three-dimensional_traction_f.pdf
+TFM/__pycache__/DeconvBeads.cpython-38.pyc
+TFM/__pycache__/PlottingUtils.cpython-38.pyc
+TFM/__pycache__/preprocess.cpython-38.pyc
+TFM/__pycache__/ShiftCorrection.cpython-38.pyc
+TFM/traction_field.png
+TFM/filtered.png
+TFM/deformation_field.png
