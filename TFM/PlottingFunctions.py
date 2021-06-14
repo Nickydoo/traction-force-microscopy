@@ -28,6 +28,15 @@ def process_mask(orig_mask, vector_shape: tuple, cell_size_approx):
 
 
 def display_vector_field(x, y, u, v, window_size, image=None):
+    """
+    :param x: x locations of vectors
+    :param y: y locations of vectors
+    :param u: x component of vector length
+    :param v: y component of vector length
+    :param window_size: window size that was used in PIV
+    :param image: optional, an image that the vector field will be displayed on
+    :return: fig and ax, they can be used or you can simply put plt.show() after the function call
+    """
     fig, ax = plt.subplots()
     xmax = np.amax(x) + window_size / 2
     ymax = np.amax(y) + window_size / 2
