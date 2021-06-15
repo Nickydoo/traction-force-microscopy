@@ -12,6 +12,7 @@ print(
 
 before_image, after_image, cell_image = correct_shift(before_image, after_image, cell_image)
 print("Stage drift corrected")
+print(f"Shapes after drift correcion are:\nBefore: {before_image.shape}, After: {after_image.shape}")
 window_size = 32
 print("Finding displacements...")
 displacement_dict = get_displacements(before_image, after_image, window_size, int(0.75 * window_size))

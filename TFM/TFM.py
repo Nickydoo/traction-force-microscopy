@@ -35,7 +35,7 @@ def load_files_tif():
 # before_image_path, after_image_path, cell_image_path = load_files()
 before_image, after_image, cell_image = load_files_tif()
 print(before_image.shape, after_image.shape)
-before_image, after_image, cell_image = correct_shift(before_image, after_image, cell_image)
+# before_image, after_image, cell_image = correct_shift(before_image, after_image, cell_image)
 print("Stage drift corrected")
 # before_image_filtered = subtract_med_filter(before_image)
 # after_image_filtered = subtract_med_filter(after_image)
@@ -77,7 +77,7 @@ window_size = 32
 displacement_dict = get_displacements(before_image, after_image, window_size, int(0.75*window_size))
 print("Displacements found")
 x, y, u, v = displacement_dict["x"], displacement_dict["y"], displacement_dict["u"], displacement_dict["v"]
-display_vector_field(x, y, u, v, window_size, image=cell_image)
+display_vector_field(x, y, u, v, window_size, image=before_image)
 plt.show()
 # M = np.sqrt(u**2 + v**2)
 # plt.imshow(cell_image)
