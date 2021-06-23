@@ -3,7 +3,8 @@ from skimage import io
 import numpy as np
 from skimage.registration import phase_cross_correlation
 from scipy.ndimage.interpolation import shift
-
+from scipy.signal import convolve2d
+from scipy.stats import mode
 
 def load_files():
     """
@@ -34,6 +35,10 @@ def normalize(img):
     img[img < 0] = 0.0
     img[img > 1] = 1.0
     return img
+
+
+def regular_normalize(img):
+    return img / np.sum(img)
 
 
 def crop(im, x_shift, y_shift):
@@ -74,3 +79,32 @@ def correct_shift(im1, im2, cell_image=None):
         return new_im1, new_im2, new_cell_image
     else:
         return new_im1, new_im2, None
+
+
+def bandpass(im, lnoise=0, lobject=0, threshold=0.05):
+    threshold *= mode(im.flatten())[0]
+    if not lnoise:
+        gaussian_kernel = np.array([[1], [0]])
+    else:
+        gk = regular_normalize(
+            np.exp(-((np.arange(-np.ceil(5 * lnoise), np.ceil(5 * lnoise) + 1)) / (2 * lnoise)) ** 2))
+        gaussian_kernel = np.vstack((gk, np.zeros(np.size(gk))))
+    if lobject:
+        bk = regular_normalize(np.ones((1, np.size(np.arange(-np.ma.round(lobject), np.ma.round(lobject) + 1)))))
+        boxcar_kernel = np.vstack((bk, np.zeros(np.size(bk))))
+    gconv = convolve2d(np.transpose(im), np.transpose(gaussian_kernel), mode='same')
+    gconv = convolve2d(np.transpose(gconv), np.transpose(gaussian_kernel), mode='same')
+    if lobject:
+        bconv = convolve2d(np.transpose(im), np.transpose(boxcar_kernel), mode='same')
+        bconv = convolve2d(np.transpose(bconv), np.transpose(boxcar_kernel), mode='same')
+        filtered = gconv - bconv
+    else:
+        filtered = gconv
+    lzero = np.amax((lobject, np.ceil(5 * lnoise)))
+
+    filtered[0:int(np.round(lzero)), :] = 0
+    filtered[(-1 - int(np.round(lzero)) + 1):, :] = 0
+    filtered[:, 0:int(np.round(lzero))] = 0
+    filtered[:, (-1 - int(np.round(lzero)) + 1):] = 0
+    filtered[filtered < threshold] = 0
+    return filtered
