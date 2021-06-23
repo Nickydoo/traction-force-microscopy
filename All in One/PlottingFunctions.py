@@ -24,3 +24,9 @@ def display_vector_field(x, y, u, v, window_size, image=None):
         quiv = ax.quiver(x, y, u, v, mag)
         fig.colorbar(quiv)
     return fig, ax
+
+def display_heatmap(x, y, u, v):
+    intensity = np.sqrt(u**2 + v**2)
+    fig, ax = plt.subplots()
+    ax.pcolormesh(x, y, intensity, shading="auto")
+    return fig, ax

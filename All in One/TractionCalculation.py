@@ -124,25 +124,16 @@ def reg_fttc(u, v, L, E, s, pix, regularized):
         return tx_filter, ty_filter
 
 
-def strain_energy_points(u, v, tx, ty, pix):
+def strain_energy(u, v, tx, ty, pix, mask):
     """
+    Calculate total strain energy
     :param u: displacement field in x direction
     :param v: displacement field in y direction
     :param tx: tractions in x direction
     :param ty: tractions in y direction
-    :param pix: pixel-distance factor
-    :return: pointwise energy (use total_strain_energy for magnitude)
+    :param pix: pixel - distance factor (um/pixel)
+    :param mask: mask of cell boundary (image/array)
+    :return: magnitude of strain energy of cell
     """
-    pix *= 10e-6
     energy = ((pix ** 2) / 2) * (tx * u * pix + ty * v * pix)
-    return energy
-
-
-def total_strain_energy(strain_energy, mask):
-    """
-    Calculate total strain energy
-    :param strain_energy: from strain_energy_points
-    :param mask: mask of cell boundary
-    :return: total strain energy
-    """
-    return np.sum(strain_energy[mask])
+    return np.sum(energy[mask])
