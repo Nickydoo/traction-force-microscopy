@@ -6,6 +6,7 @@ from scipy.ndimage.interpolation import shift
 from scipy.signal import convolve2d
 from scipy.stats import mode
 
+
 def load_files():
     """
     Loads before and after image files
@@ -22,6 +23,39 @@ def load_files():
         return before_image_beads, after_image_beads, before_image_cell
     else:
         return before_image_tif, after_image_tif, None
+
+
+def load_movie():
+    """
+    Loads files from movie. Select the movie with a cell on the substrate, and choose a reference image
+    or the first frame of a reference movie will be used. The movie should be a .tif file (not nd2) with beads
+    in the first channel and cell in the second channel
+    :return: list of images for beads, single image of unstrained beads, and list of images for cells
+    """
+    before_file_path = filedialog.askopenfilename(title="Select movie with cell on substrate")
+    after_file_path = filedialog.askopenfilename(title="Select movie/image after lysing cells")
+    movie = io.imread(before_file_path)
+    after = io.imread(after_file_path)
+    bead_frames = [movie[i, 0, ...] for i in range(movie.shape[0])]
+    cell_frames = [movie[i, 1, ...] for i in range(movie.shape[0])]
+    if after.ndim == 3:
+        after_image_beads = after[0, ...]
+    elif after.ndim == 4:
+        after_image_beads = after[0, 0, ...]
+    else:
+        after_image_beads = after
+    return bead_frames, after_image_beads, cell_frames
+
+
+def load_movie_dynamics():
+    """
+    :return: list of bead images and list of cell images
+    """
+    file_path = filedialog.askopenfilename(title="Select TIF movie")
+    movie = io.imread(file_path)
+    beads = [movie[i, 0, ...] for i in range(movie.shape[0])]
+    cell = [movie[i, 1, ...] for i in range(movie.shape[0])]
+    return beads, cell
 
 
 def normalize(img):
