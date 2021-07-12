@@ -2,6 +2,8 @@ from tkinter import filedialog
 from skimage import io
 import numpy as np
 from skimage.registration import phase_cross_correlation
+from skimage.restoration import rolling_ball
+from skimage.filters import difference_of_gaussians
 from scipy.ndimage.interpolation import shift
 from scipy.signal import convolve2d
 from scipy.stats import mode
@@ -142,3 +144,10 @@ def bandpass(im, lnoise=0, lobject=0, threshold=0.05):
     filtered[:, (-1 - int(np.round(lzero)) + 1):] = 0
     filtered[filtered < threshold] = 0
     return filtered
+
+
+def filter_for_tfm(img, low=2, high=10, radius=5):
+    filtered_img = difference_of_gaussians(img, low, high)
+    background = rolling_ball(filtered_img, radius=radius)
+    only_beads = filtered_img - background
+    return only_beads
