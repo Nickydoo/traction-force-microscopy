@@ -147,7 +147,19 @@ def bandpass(im, lnoise=0, lobject=0, threshold=0.05):
 
 
 def filter_for_tfm(img, low=2, high=10, radius=5):
+    """
+    Apply first a bandpass and then a background subtraction to fluorescent bead images
+    Difference of gaussians - features will be detected between low and high
+    :param img: image of beads
+    :param low: sigma of smaller gaussian
+    :param high: sigma of larger gaussian
+    :param radius: radius of rolling ball for background subtraction
+    :return: processed image
+    """
     filtered_img = difference_of_gaussians(img, low, high)
-    background = rolling_ball(filtered_img, radius=radius)
-    only_beads = filtered_img - background
-    return only_beads
+    if radius is not None:
+        background = rolling_ball(filtered_img, radius=radius)
+        only_beads = filtered_img - background
+        return only_beads
+    else:
+        return filtered_img
