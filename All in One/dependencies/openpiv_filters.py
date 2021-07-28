@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from openpiv.lib import replace_nans
+from openpiv_lib import replace_nans
 import numpy as np
 from scipy.signal import convolve
 
@@ -35,8 +35,8 @@ def _gaussian_kernel(half_width=1):
     Examples
     --------
 
-    >>> from openpiv.filters import _gaussian_kernel
-    >>> _gaussian_kernel(1)
+    # >>> from openpiv.filters import _gaussian_kernel
+    # >>> _gaussian_kernel(1)
     array([[ 0.04491922,  0.12210311,  0.04491922],
        [ 0.12210311,  0.33191066,  0.12210311],
        [ 0.04491922,  0.12210311,  0.04491922]])
