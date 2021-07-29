@@ -195,3 +195,18 @@ Data/Second attempt/left different one trypsin.tif
 .idea/misc.xml
 .idea/misc.xml
 .idea/misc.xml
+.ipynb_checkpoints/filtering-checkpoint.ipynb
+before_f.tif
+before_proc.tif
+filtered.tif
+timelapse.nd2 - T=1_filtered.tif
+timelapse.nd2 - T=1_filtered_b.tif
+timelapse.nd2 - T=1_filtered_n.tif
+stack_of_filtered.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/beads.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/beads_2.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/beads_2_1.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/beads_2_2.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/beads_2_3.tif
+Validation/MicrosystemsLab-TFM-model-4dabbba/desktop.ini
+Validation/MicrosystemsLab-TFM-model-4dabbba/imgprocess2.m
