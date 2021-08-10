@@ -2,138 +2,125 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
 
-def reg_fttc(u, v, L, E, s, pix, regularized):
+def fttc(u, v, E, s, pix, pix_new):
     """
     Calculates traction field using regularized fourier transform traction cytometry
     :param u: deformation field in x direction
     :param v: deformation field in y direction
-    :param L: Tikhonov regularization parameter
     :param E: Young's modulus
     :param s: Poisson's ratio
-    :param pix: pixel size of image (from microscope)
-    :param regularized: whether or not to apply regularization (uses MATLAB code)
+    :param pix: pixel size of image (from microscope), m/pixel
+    :param pix_new: pixel size of deformation field, equal to pix*mean(after_image.shape / u.shape), m/pixel
     :return: traction fields in x and y directions
     """
-    if regularized:
-        v *= -1
-        V = 2 * (1 + s) / E
-        # must zero pad first to get regular grid (step 1)
-        ax1_length = np.shape(u)[0]
-        ax2_length = np.shape(u)[1]
-        max_ind = int(np.max((ax1_length, ax2_length)))
-        if max_ind % 2 != 0:
-            max_ind += 1  # make sure it is even
-        u_expand = np.zeros((max_ind, max_ind))
-        v_expand = np.zeros((max_ind, max_ind))
-        u_expand[:ax1_length, :ax2_length] = u
-        v_expand[:ax1_length, :ax2_length] = v
+    v *= -1
+    u_shift = (u - np.mean(u))
+    v_shift = (v - np.mean(v))
+    # must zero pad first to get regular grid (step 1)
+    ax1_length = np.shape(u_shift)[0]
+    ax2_length = np.shape(u_shift)[1]
+    max_ind = int(np.max((ax1_length, ax2_length)))
+    if max_ind % 2 != 0:
+        max_ind += 1  # make sure it is even
+    u_expand = np.zeros((max_ind, max_ind))
+    v_expand = np.zeros((max_ind, max_ind))
+    u_expand[:ax1_length, :ax2_length] = u_shift
+    v_expand[:ax1_length, :ax2_length] = v_shift
 
-        # make wave vectors for u and v (step 2)
-        kx1 = np.array([list(range(0, int(max_ind / 2), 1)), ] * int(max_ind))
-        kx2 = np.array([list(range(-int(max_ind / 2), 0, 1)), ] * int(max_ind))
-        kx = np.append(kx1, kx2, axis=1) * 2 * np.pi
+    # make wave vectors for u and v (step 2)
+    kx1 = np.array([list(range(0, int(max_ind / 2), 1)), ] * int(max_ind))
+    kx2 = np.array([list(range(-int(max_ind / 2), 0, 1)), ] * int(max_ind))
+    kx = np.append(kx1, kx2, axis=1) * 2 * np.pi
+    # F(kx) = 1/2pi * integral(e^(i*kx*x))dk
 
-        ky = np.transpose(kx)
-        k = np.sqrt(kx ** 2 + ky ** 2) / (pix * max_ind)
+    ky = np.transpose(kx)
+    k = np.sqrt(kx ** 2 + ky ** 2) / (pix_new * max_ind)
+    # calculate angle between k and kx
+    alpha = np.arctan2(ky, kx)
+    alpha[0, 0] = np.pi / 2
 
-        # fourier transforms of displacement (step 3)
-        u_ft = np.fft.fft2(u_expand * pix)
-        v_ft = np.fft.fft2(v_expand * pix)
-        Ginv_xx = (kx ** 2 + ky ** 2) ** (-1 / 2) * V * (kx ** 2 * L + ky ** 2 * L + V ** 2) ** (-1) * (
-                kx ** 2 * L + ky ** 2 * L + ((-1) + s) ** 2 * V ** 2) ** (-1) * (
-                          kx ** 4 * (L + (-1) * L * s) + kx ** 2 * (
-                          (-1) * ky ** 2 * L * ((-2) + s) + (-1) * ((-1) + s) * V ** 2) + ky ** 2 * (
-                                  ky ** 2 * L + ((-1) + s) ** 2 * V ** 2))
+    # calculation of K tensor to calculate traction, inverse of K is calculated
+    # k^(-1) = [[kix kid],
+    #          [kid, kiy]]
+    kix = ((k * E) / (2 * (1 - s ** 2))) * (1 - s + s * np.cos(alpha) ** 2)
+    kiy = ((k * E) / (2 * (1 - s ** 2))) * (1 - s + s * np.sin(alpha) ** 2)
+    kid = ((k * E) / (2 * (1 - s ** 2))) * (s * np.sin(alpha) * np.cos(alpha))
 
-        Ginv_yy = (kx ** 2 + ky ** 2) ** (-1 / 2) * V * (kx ** 2 * L + ky ** 2 * L + V ** 2) ** (-1) * (
-                kx ** 2 * L + ky ** 2 * L + ((-1) + s) ** 2 * V ** 2) ** (-1) * (
-                          kx ** 4 * L + (-1) * ky ** 2 * ((-1) + s) * (ky ** 2 * L + V ** 2) + kx ** 2 * (
-                          (-1) * ky ** 2 * L * ((-2) + s) + ((-1) + s) ** 2 * V ** 2))
+    # add zeros in diagonal
+    kid[:, int(max_ind / 2)] = np.zeros(max_ind)
+    kid[int(max_ind / 2), :] = np.zeros(max_ind)
 
-        Ginv_xy = (-1) * kx * ky * (kx ** 2 + ky ** 2) ** (-1 / 2) * s * V * (kx ** 2 * L + ky ** 2 * L + V ** 2) ** (
-            -1) * (kx ** 2 * L + ky ** 2 * L + ((-1) + s) * V ** 2) * (
-                          kx ** 2 * L + ky ** 2 * L + ((-1) + s) ** 2 * V ** 2) ** (-1)
-        Ginv_xx[0, 0] = 0
-        Ginv_yy[0, 0] = 0
-        Ginv_xy[0, 0] = 0
-        Ginv_xy[max_ind // 2 + 1, :] = 0
-        Ginv_xy[:, max_ind // 2 + 1] = 0
-        # calculate traction in fourier space (step 5)
-        Ftfx = Ginv_xx * u_ft + Ginv_xy * v_ft
-        Ftfy = Ginv_xy * u_ft + Ginv_yy * v_ft
-        # transform back to real space (step 6)
-        tx = np.fft.ifft2(Ftfx).real
-        ty = np.fft.ifft2(Ftfy).real
-        return tx, ty
+    # fourier transform of displacements
+    u_ft = np.fft.fft2(u_expand * pix)
+    v_ft = np.fft.fft2(v_expand * pix)
+
+    # tractions in fourier space - T = k^(-1) * U where U = [u, v]
+    tx_ft = kix * u_ft + kid * v_ft
+    ty_ft = kid * u_ft + kiy * v_ft
+
+    # go back to real space
+
+    tx = np.fft.ifft2(tx_ft).real
+    ty = np.fft.ifft2(ty_ft).real
+
+    tx_cut = tx[0:ax1_length, 0:ax2_length]
+    ty_cut = ty[0:ax1_length, 0:ax2_length]
+    fs = max_ind / 50
+    tx_filter = gaussian_filter(tx_cut, sigma=fs)
+    ty_filter = gaussian_filter(ty_cut, sigma=fs)
+    return tx_filter, ty_filter
+
+
+def strain_energy(u, v, tx, ty, pixelsize, newpixelsize, mask):
+    """
+    :param u: deformation field in x direction
+    :param v: deformation field in y direction
+    :param tx: x tractions
+    :param ty: y tractions
+    :param pixelsize: pixel size of original image, from microscope (units m/pixel)
+    :param newpixelsize: pixel size of deformation field (units m/pixel)
+    :param mask: optional mask of cell area
+    :return: total strain energy or strain energy in mask
+    """
+    energy = ((newpixelsize ** 2) / 2) * (tx * u * pixelsize + ty * v * pixelsize)
+    background = np.percentile(energy, 20)
+    energy -= background
+    if mask is not None:
+        return np.sum(energy[mask])
     else:
-        v *= -1
-        u_shift = (u - np.mean(u))
-        v_shift = (v - np.mean(v))
-        # must zero pad first to get regular grid (step 1)
-        ax1_length = np.shape(u_shift)[0]
-        ax2_length = np.shape(u_shift)[1]
-        max_ind = int(np.max((ax1_length, ax2_length)))
-        if max_ind % 2 != 0:
-            max_ind += 1  # make sure it is even
-        u_expand = np.zeros((max_ind, max_ind))
-        v_expand = np.zeros((max_ind, max_ind))
-        u_expand[:ax1_length, :ax2_length] = u_shift
-        v_expand[:ax1_length, :ax2_length] = v_shift
-
-        # make wave vectors for u and v (step 2)
-        kx1 = np.array([list(range(0, int(max_ind / 2), 1)), ] * int(max_ind))
-        kx2 = np.array([list(range(-int(max_ind / 2), 0, 1)), ] * int(max_ind))
-        kx = np.append(kx1, kx2, axis=1) * 2 * np.pi
-        # F(kx) = 1/2pi * integral(e^(i*kx*x))dk
-
-        ky = np.transpose(kx)
-        k = np.sqrt(kx ** 2 + ky ** 2) / (pix * max_ind)
-        # calculate angle between k and kx
-        alpha = np.arctan2(ky, kx)
-        alpha[0, 0] = np.pi / 2
-
-        # calculation of K tensor to calculate traction, inverse of K is calculated
-        # k^(-1) = [[kix kid],
-        #          [kid, kiy]]
-        kix = ((k * E) / (2 * (1 - s ** 2))) * (1 - s + s * np.cos(alpha) ** 2)
-        kiy = ((k * E) / (2 * (1 - s ** 2))) * (1 - s + s * np.sin(alpha) ** 2)
-        kid = ((k * E) / (2 * (1 - s ** 2))) * (s * np.sin(alpha) * np.cos(alpha))
-
-        # add zeros in diagonal
-        kid[:, int(max_ind / 2)] = np.zeros(max_ind)
-        kid[int(max_ind / 2), :] = np.zeros(max_ind)
-
-        # fourier transform of displacements
-        u_ft = np.fft.fft2(u_expand * pix)
-        v_ft = np.fft.fft2(v_expand * pix)
-
-        # tractions in fourier space - T = k^(-1) * U where U = [u, v]
-        tx_ft = kix * u_ft + kid * v_ft
-        ty_ft = kid * u_ft + kiy * v_ft
-
-        # go back to real space
-
-        tx = np.fft.ifft2(tx_ft).real
-        ty = np.fft.ifft2(ty_ft).real
-
-        tx_cut = tx[0:ax1_length, 0:ax2_length]
-        ty_cut = ty[0:ax1_length, 0:ax2_length]
-        fs = max_ind / 50
-        tx_filter = gaussian_filter(tx_cut, sigma=fs)
-        ty_filter = gaussian_filter(ty_cut, sigma=fs)
-        return tx_filter, ty_filter
+        return np.sum(energy)
 
 
-def strain_energy(u, v, tx, ty, pix, mask):
+def contractility(x, y, tx, ty, pixelsize, mask):
     """
-    Calculate total strain energy
-    :param u: displacement field in x direction
-    :param v: displacement field in y direction
-    :param tx: tractions in x direction
-    :param ty: tractions in y direction
-    :param pix: pixel - distance factor (um/pixel)
-    :param mask: mask of cell boundary (image/array)
-    :return: magnitude of strain energy of cell
+    :param x: x coordinate of window centers
+    :param y: y coordinate of window centers
+    :param tx: x tractions
+    :param ty: y tractions
+    :param pixelsize: pixel size of deformation/traction field in m/pixel
+    :param mask: optional mask of cell area
+    :return: contractile force in Newtons
     """
-    energy = ((pix ** 2) / 2) * (tx * u * pix + ty * v * pix)
-    return np.sum(energy[mask])
+    mask_area = np.sum(mask) * pixelsize ** 2
+    tx_filter = tx.copy()
+    ty_filter = ty.copy()
+    tx_filter[~mask] = 0
+    ty_filter[~mask] = 0
+    fx = tx_filter * mask_area
+    fy = ty_filter * mask_area
+
+    traction_mags = np.sqrt(tx_filter ** 2 + ty_filter ** 2)
+    bx = np.sum(x * (traction_mags ** 2) + fx * (tx_filter * fx + ty_filter * fy))
+    by = np.sum(y * (traction_mags ** 2) + fy * (tx_filter * fx + ty * fy))
+    axx = np.sum(traction_mags ** 2 + fx ** 2)
+    axy = np.sum(fx * fy)
+    ayy = np.sum(traction_mags ** 2 + fy ** 2)
+    A = np.array([[axx, axy], [axy, ayy]])
+    b = np.array([bx, by]).T
+    center = np.matmul(np.linalg.inv(A), b)
+    dist_x = center[0] - x
+    dist_y = center[1] - y
+    dist_abs = np.sqrt(dist_y ** 2 + dist_x ** 2)
+    proj_abs = (fx * dist_x + fy * dist_y) / dist_abs
+    contractile_force = np.nansum(proj_abs)
+    return contractile_force
