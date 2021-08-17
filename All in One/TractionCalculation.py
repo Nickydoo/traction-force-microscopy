@@ -2,15 +2,16 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
 
-def fttc(u, v, E, s, pix, pix_new):
+def fttc(u, v, E, s, pixelsize, newpixelsize):
     """
     Calculates traction field using regularized fourier transform traction cytometry
+    Code from https://github.com/fabrylab/pyTFM
     :param u: deformation field in x direction
     :param v: deformation field in y direction
     :param E: Young's modulus
     :param s: Poisson's ratio
-    :param pix: pixel size of image (from microscope), m/pixel
-    :param pix_new: pixel size of deformation field, equal to pix*mean(after_image.shape / u.shape), m/pixel
+    :param pixelsize: pixel size of image (from microscope), m/pixel
+    :param newpixelsize: pixel size of deformation field, equal to pix*mean(after_image.shape / u.shape), m/pixel
     :return: traction fields in x and y directions
     """
     v *= -1
@@ -34,7 +35,7 @@ def fttc(u, v, E, s, pix, pix_new):
     # F(kx) = 1/2pi * integral(e^(i*kx*x))dk
 
     ky = np.transpose(kx)
-    k = np.sqrt(kx ** 2 + ky ** 2) / (pix_new * max_ind)
+    k = np.sqrt(kx ** 2 + ky ** 2) / (newpixelsize * max_ind)
     # calculate angle between k and kx
     alpha = np.arctan2(ky, kx)
     alpha[0, 0] = np.pi / 2
@@ -51,8 +52,8 @@ def fttc(u, v, E, s, pix, pix_new):
     kid[int(max_ind / 2), :] = np.zeros(max_ind)
 
     # fourier transform of displacements
-    u_ft = np.fft.fft2(u_expand * pix)
-    v_ft = np.fft.fft2(v_expand * pix)
+    u_ft = np.fft.fft2(u_expand * pixelsize)
+    v_ft = np.fft.fft2(v_expand * pixelsize)
 
     # tractions in fourier space - T = k^(-1) * U where U = [u, v]
     tx_ft = kix * u_ft + kid * v_ft
@@ -91,17 +92,17 @@ def strain_energy(u, v, tx, ty, pixelsize, newpixelsize, mask):
         return np.sum(energy)
 
 
-def contractility(x, y, tx, ty, pixelsize, mask):
+def contractility(x, y, tx, ty, newpixelsize, mask):
     """
     :param x: x coordinate of window centers
     :param y: y coordinate of window centers
     :param tx: x tractions
     :param ty: y tractions
-    :param pixelsize: pixel size of deformation/traction field in m/pixel
+    :param newpixelsize: pixel size of deformation/traction field in m/pixel
     :param mask: optional mask of cell area
     :return: contractile force in Newtons
     """
-    mask_area = np.sum(mask) * pixelsize ** 2
+    mask_area = np.sum(mask) * newpixelsize ** 2
     tx_filter = tx.copy()
     ty_filter = ty.copy()
     tx_filter[~mask] = 0
