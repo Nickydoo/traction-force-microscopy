@@ -72,11 +72,11 @@ print("Found tractions")
 
 display_vector_field(x, y, tx, ty, window_size, image=cell_image, cmap="viridis")
 plt.show()
-print(f'u has shape {u.shape}')
-print(f'v has shape {v.shape}')
 
 # Resize cell image to same size as displacement field, and then draw a mask using RoiPoly
 
+print(f'u has shape {u.shape}')
+print(f'v has shape {v.shape}')
 small_cell = resize(cell_image, u.shape)
 plt.imshow(small_cell)
 my_roi = RoiPoly(color="red")
@@ -104,6 +104,6 @@ mask_area = np.sum(my_mask) * ps_new**2
 print(f'average traction is {avg_traction} Pa')
 print(f'average force is {avg_traction * mask_area} newtons')
 print(f'strain energy is {strain_energy*10e12} picojoules')
-print(f'average displacement is {avg_displacements} pixels or {0.12*avg_displacements} microns')
-print(f'median displacement is {median_displacements} pixels or {0.12*median_displacements} microns')
+print(f'average displacement is {avg_displacements} pixels or {ps_new*avg_displacements} microns')
+print(f'median displacement is {median_displacements} pixels or {ps_new*median_displacements} microns')
 print(f'contractility is {contforce} newtons')
