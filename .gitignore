@@ -216,3 +216,4 @@ test.npy
 All in One/__pycache__/traction_old.cpython-38.pyc
 .ipynb_checkpoints/trackpy_test-checkpoint.ipynb
 All in One/dynamics_win50_thresh1.npy
+/Simulation/.idea/
