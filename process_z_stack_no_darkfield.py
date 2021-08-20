@@ -25,10 +25,6 @@ def register_movie(stack):
     return np.array(shifted_ims)
 
 
-def regular_norm(img):
-    return img / np.sum(img)
-
-
 def normalize(img):
     """
     Normalizes image
@@ -40,6 +36,10 @@ def normalize(img):
     img[img < 0] = 0.0
     img[img > 1] = 1.0
     return img
+
+
+def regular_norm(img):
+    return img / np.sum(img)
 
 
 def bandpass(im, lnoise=0, lobject=0, threshold=0):
@@ -80,13 +80,13 @@ def bandpass(im, lnoise=0, lobject=0, threshold=0):
 
 matplotlib.rc('image', cmap='gray')
 
-fname = r"D:\Sam\July 29\timelapse 40x.nd2 - timelapse 40x.nd2 (series 4).tif"
-orig = io.imread(fname)
+fname = r"D:\Sam\August 3\location 2.tif"
+beads_stacks = io.imread(fname)
 # array is (time, z, channel, x, y)
 # second type is (time, x, y, channel)
 # so first cell image is (0, 1, 0, ...) because cell z stack is blank in 0 and 2
 # beads images are (time, layer, 1, ...)
-beads_stacks = orig[:, :, 1, ...]
+# beads_stacks = orig[:, :, 1, ...]
 # cell_ims = orig[:, 1, 0, ...]
 print("Filtering frames")
 # first_slice_beads_dog = np.array(
@@ -101,18 +101,22 @@ print("Filtering frames")
 noisesize = 1
 objsize = 3
 first_slice_beads_dog = np.array(
-    [normalize(bandpass(median_filter(beads_stacks[i, 0, ...], 1), noisesize, objsize))
+    [normalize(bandpass(beads_stacks[i, ..., 0], noisesize, objsize))
      for i in range(beads_stacks.shape[0])])
 second_slice_beads_dog = np.array(
-    [normalize(bandpass(median_filter(beads_stacks[i, 1, ...], 1), noisesize, objsize))
+    [normalize(bandpass(beads_stacks[i, ..., 1], noisesize, objsize))
      for i in range(beads_stacks.shape[0])])
 third_slice_beads_dog = np.array(
-    [normalize(bandpass(median_filter(beads_stacks[i, 2, ...], 1), noisesize, objsize))
+    [normalize(bandpass(beads_stacks[i, ..., 2], noisesize, objsize))
+     for i in range(beads_stacks.shape[0])])
+fourth_slice_beads_dog = np.array(
+    [normalize(bandpass(beads_stacks[i, ..., 3], noisesize, objsize))
      for i in range(beads_stacks.shape[0])])
 
-projection = np.average(np.stack([first_slice_beads_dog, second_slice_beads_dog, third_slice_beads_dog]), axis=0)
+new = np.stack([first_slice_beads_dog, second_slice_beads_dog, third_slice_beads_dog, fourth_slice_beads_dog])
 # filtered = np.transpose(new, (1, 0, 2, 3))
+projection = np.average(new, axis=0)
 print("Registering frames")
 projection = register_movie(projection)
-savename = fname.split("\\")[-1] + "_processed_med1_bp_n1obj3n.tif"
-io.imsave(r'D:\Sam\July 29\Processed' + "\\" + savename, projection)
+savename = fname.split("\\")[-1] + "_processed_bp_n1obj3n.tif"
+io.imsave(r'D:\Sam\August 3\Processed' + "\\" + savename, projection)
