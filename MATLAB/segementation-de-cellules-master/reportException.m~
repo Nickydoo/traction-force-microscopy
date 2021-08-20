@@ -1,0 +1,15 @@
+function outMessage = reportException(exception)
+
+    % Get name of caller function
+    [callStack, ~] = dbstack('-completenames', 1);
+    callerFuncName = callStack(1).name;
+
+    % Builds error message for the caller function
+    errorString = ['Error in function ' callerFuncName '. Message: ' exception.message];
+    
+    % Adds the error from the callStack
+    errorString = [errorString buildCallStack(exception)];
+
+    outMessage = logit(folder,errorString);
+
+end

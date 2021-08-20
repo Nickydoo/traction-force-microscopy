@@ -1,0 +1,73 @@
+function [newFileNames, rawDir] = getNewFiles(dname)
+
+persistent doneFiles dataDir
+
+if isempty(doneFiles)
+    doneFiles = {''};
+end
+
+newFileNames = []; % Default output
+rawDir       = dataDir;
+
+currentList = dir(fullfile(dname,'*.TIF'));
+
+msk = ~ismember({currentList(:).name},doneFiles);
+
+newDates = {currentList(msk).date};
+newFiles = {currentList(msk).name};
+
+% Create rawData folder
+if isempty(dataDir)
+    
+    dataDir = fullfile(dname,'rawData');
+    mkdir(dataDir);
+    rawDir = dataDir;
+    
+end
+
+% Select files that have to be renamed
+% newFiles = setdiff(currentListNames,doneFiles);
+if isempty(newFiles), return, end
+
+% Compute new names, including path
+newFileNames = fullfile(dataDir,cellfun(@renameFile,newFiles,'UniformOutput',false));
+
+thisDoneFiles = {''};
+
+for k = 1:numel(newFiles)
+%     im = imread(fullfile(dname,newFiles{k}));
+%     imwrite(im,newFileNames{k});
+
+    if seconds(datetime - datetime(newDates{k})) < 60
+        errString = [mfilename ': Skipping moving a file that is too new: ' newFiles{k}];
+        disp(logit(dname,errString))
+      continue
+    end
+
+    disp(logit(dname,['Moving: ' newFiles{k} ' to ' newFileNames{k}]))
+    
+    try
+        
+        movefile(fullfile(dname,newFiles{k}),newFileNames{k},'f')
+        
+        while ~exist(newFileNames{k},'file')
+            pause(0.5)
+            disp('getNewFiles: Waiting while file is moving')
+        end
+        
+    catch exception
+        disp(reportException(dname, exception))
+        continue
+    end
+    
+    % Add successfully moved files to the list
+    thisDoneFiles = [thisDoneFiles; newFiles{k}];
+    
+end
+
+% Updates doneFiles
+doneFiles = unique([doneFiles;thisDoneFiles]);
+msk = ~logical(cellfun(@isempty,doneFiles))
+
+end
+

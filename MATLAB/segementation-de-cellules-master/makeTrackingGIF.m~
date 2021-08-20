@@ -1,0 +1,115 @@
+
+function tracks = makeTrackingGIF(rawDataDir,tracks,resDir,frames,msk, trkFilter,positionID)
+
+% Defaults
+if nargin < 6, trkFilter = @(x) x; end %Default is no filter
+if nargin < 5, msk       = [];     end %Default is no mask
+if nargin < 4, frames    = min(tracks(:,3)):max(tracks(:,3));    end %Default is all frames
+
+% Constants
+colores = parula;
+
+% Check if input data exist
+fnIms  = dir(fullfile(rawDataDir,['N' num2str(positionID-1,'%03.0f') 'T*.jpg']));
+if isempty(fnIms), error('Error: Images directory is empty'), end
+
+% Create output directory
+if ~exist(resDir,'dir')
+    mkdir(resDir);
+    disp(['Create directory: ' resDir])
+end
+
+% Ensure choosen frames are within the images set
+frames = frames(ismember(frames,1:numel(fnIms)));
+
+imDrawn = zeros([size(imread(fullfile(rawDataDir, fnIms(1).name))),3]);
+
+% Filter tracks
+tracks = trkFilter(tracks);
+if isempty(tracks), error('Error: No trajectories'), end
+
+% Change track Ids if needed
+if any(diff(unique(tracks(:,4)))>1) || min(tracks(:,4)) ~= 1
+    tracks = normalizeIds(tracks);
+end
+
+% Select tracks within mask to be drawn
+if ~isempty(msk)
+    plot(tracks(:,1),tracks(:,2),'.r')
+    tracks = selectTracksWhithinMask(tracks,msk,true);
+end
+
+%Round positions, as it make no sense to keep superresolution to draw
+tracks(:,1:2) = round(tracks(:,1:2));
+
+% Compute trajectories properties to paint colors
+idsInTimeRange = unique(tracks(ismember(tracks(:,3),min(frames):max(frames)),4));
+tracksGood  = tracks(ismember(tracks(:,4),idsInTimeRange),:);
+
+% Compute descriptors for selected tracks, and assign bins to each track
+[tracksDescriptors, ~] = getTrajectoriesPropertiesNoPattern(tracksGood, 1, size(imDrawn, 1), size(imDrawn, 2));
+[~, ~, colorBin] = histcounts(tracksDescriptors(:,14), 9);
+
+fh = figure;
+auxfname = 'auxFile.png';
+
+for k = frames(1:end-1)
+    
+    im = imread(fullfile(rawDataDir, fnIms(k).name));
+    
+    clf(fh,'reset');
+    
+    imshow(im,[],'Border','Tight'), hold on
+    
+    text(20,50,num2str(k,'%03.0f'),'Color','y','FontSize',36)
+    
+    print(fh,auxfname,'-dpng')
+    im = imread(auxfname);
+    [imind,cm]=rgb2ind(im,256);
+    
+    if k == frames(1)
+        imwrite(imind,cm,fullfile(resDir,'niceTracks.gif'),'gif','Loopcount',inf)
+    else
+        imwrite(imind,cm,fullfile(resDir, 'niceTracks.gif'),'gif','Writemode','append')
+    end
+    
+    hold off
+    
+end
+
+% Draw tracks on last frame
+clf(fh,'reset');
+
+im = imread(fullfile(rawDataDir, fnIms(frames(end)).name));
+
+imshow(im,[],'Border','Tight'), hold on
+
+text(20,50,num2str(k,'%03.0f'),'Color','y','FontSize',36)
+
+for t = 1:numel(idsInTimeRange)
+    iTrack = tracksGood(ismember(tracksGood(:,4),idsInTimeRange(t)),:);
+    
+    msk = ismember(iTrack(:,3),frames(end));
+    
+    thisColor = colores((colorBin(ismember(tracksDescriptors(:,1),idsInTimeRange(t))) + 1) * 6,:);
+    
+    line(iTrack(:,1),iTrack(:,2),'Color',thisColor);
+    
+    plot(iTrack(msk,1),iTrack(msk,2),'*','MarkerSize',10, 'MarkerFaceColor', 'r','MarkerEdgeColor','r')
+    
+    textPos = [iTrack(msk,1),iTrack(msk,2)];
+    
+    text(20,50,num2str(k,'%03.0f'),'Color','y','FontSize',36)
+end
+
+drawnow
+
+print(fh,auxfname,'-dpng')
+im = imread(auxfname);
+[imind,cm] = rgb2ind(im,256);
+
+imwrite(imind,cm,fullfile(resDir, 'niceTracks.gif'),'gif','Writemode','append')
+
+end
+
+
