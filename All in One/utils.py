@@ -117,7 +117,15 @@ def correct_shift(im1, im2, cell_image=None):
         return new_im1, new_im2, None
 
 
-def bandpass(im, lnoise=0, lobject=0, threshold=0.05):
+def bandpass(im, lnoise=0, lobject=0, threshold=0):
+    """
+    Python adaption of original IDL/MATLAB particle tracking bandpass code
+    :param im: image to be filtered
+    :param lnoise: Characteristic lengthscale of noise in pixels
+    :param lobject: Integer length in pixels somewhat larger than an object of interest
+    :param threshold: brightness threshold
+    :return:
+    """
     threshold *= mode(im.flatten())[0]
     if not lnoise:
         gaussian_kernel = np.array([[1], [0]])
@@ -146,14 +154,14 @@ def bandpass(im, lnoise=0, lobject=0, threshold=0.05):
     return filtered
 
 
-def filter_for_tfm(img, low=2, high=10, radius=5):
+def filter_for_tfm(img, low=2, high=10, radius=None):
     """
     Apply first a bandpass and then a background subtraction to fluorescent bead images
     Difference of gaussians - features will be detected between low and high
     :param img: image of beads
     :param low: sigma of smaller gaussian
     :param high: sigma of larger gaussian
-    :param radius: radius of rolling ball for background subtraction
+    :param radius: radius of rolling ball for background subtraction, recommended only in extreme cases (slow)
     :return: processed image
     """
     filtered_img = difference_of_gaussians(img, low, high)
